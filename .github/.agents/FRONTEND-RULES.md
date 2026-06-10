@@ -5,6 +5,7 @@
 These rules apply to all frontend projects, not just individual applications. All frontend work must conform to the standards below regardless of project.
 
 ### GOV.UK Design System
+
 All frontend UI must be built using [GOV.UK Design System](https://design-system.service.gov.uk/get-started/production/) components and patterns. Do not build custom UI components or patterns when an equivalent exists in the Design System.
 
 - Use the Design System [components](https://design-system.service.gov.uk/components/), [patterns](https://design-system.service.gov.uk/patterns/), and [styles](https://design-system.service.gov.uk/styles/) as the first and default choice
@@ -12,22 +13,25 @@ All frontend UI must be built using [GOV.UK Design System](https://design-system
 - Keep `govuk-frontend` up to date to receive accessibility fixes and new components
 
 ### Accessibility — WCAG 2.2 Level AA
+
 All frontend work must meet [Web Content Accessibility Guidelines (WCAG) 2.2](https://www.w3.org/WAI/WCAG22/Understanding/) Level AA as a minimum.
 
 Key criteria to enforce in all generated and reviewed code:
 
-| Criterion | Requirement |
-|-----------|-------------|
-| [1.4.11 Non-text Contrast (AA)](https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html) | UI components (inputs, buttons, focus indicators) and informational graphics must have a contrast ratio of at least 3:1 against adjacent colours |
-| [1.4.3 Contrast (Minimum)](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html) | Text must have a contrast ratio of at least 4.5:1 (3:1 for large text) |
-| [2.4.7 Focus Visible](https://www.w3.org/WAI/WCAG22/Understanding/focus-visible.html) | Keyboard focus must always be visible |
-| [2.4.11 Focus Appearance (AA, new in 2.2)](https://www.w3.org/WAI/WCAG22/Understanding/focus-appearance.html) | Focus indicators must meet minimum size and contrast requirements |
-| [4.1.3 Status Messages](https://www.w3.org/WAI/WCAG22/Understanding/status-messages.html) | Status and error messages must be programmatically determinable without receiving focus |
+| Criterion                                                                                                     | Requirement                                                                                                                                      |
+| ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [1.4.11 Non-text Contrast (AA)](https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html)           | UI components (inputs, buttons, focus indicators) and informational graphics must have a contrast ratio of at least 3:1 against adjacent colours |
+| [1.4.3 Contrast (Minimum)](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html)                 | Text must have a contrast ratio of at least 4.5:1 (3:1 for large text)                                                                           |
+| [2.4.7 Focus Visible](https://www.w3.org/WAI/WCAG22/Understanding/focus-visible.html)                         | Keyboard focus must always be visible                                                                                                            |
+| [2.4.11 Focus Appearance (AA, new in 2.2)](https://www.w3.org/WAI/WCAG22/Understanding/focus-appearance.html) | Focus indicators must meet minimum size and contrast requirements                                                                                |
+| [4.1.3 Status Messages](https://www.w3.org/WAI/WCAG22/Understanding/status-messages.html)                     | Status and error messages must be programmatically determinable without receiving focus                                                          |
 
 GOV.UK Design System components are built to meet these criteria by default. **Do not override Design System focus styles, colour tokens, or contrast values** — doing so is likely to introduce WCAG failures.
 
 ## AI Assistant Behavior
+
 As an AI assistant creating a GDS compliant frontend you should:
+
 - **Prioritize accessibility** and government standards in all suggestions
 - **Use semantic search** to understand existing patterns before suggesting new code
 - **Read existing files** to understand the current implementation before making changes
@@ -37,9 +41,11 @@ As an AI assistant creating a GDS compliant frontend you should:
 - **Suggest improvements** that align with user-centered design principles
 
 ## Project Overview
+
 This project is the productionised frontend for the Defra Air Quality (AQIE) interactive map. It serves a full-screen interactive map allowing users to explore current air quality readings from monitoring stations across the UK. It is the production implementation of the patterns and features prototyped in `aqie-maps-prototype`.
 
 Key features:
+
 - **Interactive map** — full-screen map (powered by `@defra/interactive-map` and MapLibre) displaying monitoring station locations
 - **Station information panel** — selecting a station displays its air quality readings and metadata
 - **Pollutant filter panel** — users can filter the map display by pollutant type
@@ -47,13 +53,13 @@ Key features:
 - **Live measurements** — current readings fetched from `aqie-back-end`
 
 The application:
+
 - **For public users**: members of the public checking air quality near them
 - **Department**: Department for Environment, Food and Rural Affairs (Defra)
 - **Upstream services**: `aqie-back-end` (monitoring station data and measurements), `aqie-forecast-api` (forecasts)
 
-
-
 ## Technical Framework
+
 - **Server-side**: Node.js and Hapi
 - **Templating**: Nunjucks
 - **UI Components**: GOV.UK Design System (`govuk-frontend`)
@@ -61,6 +67,7 @@ The application:
 - **Infrastructure**: Deployed on Defra's Core Delivery Platform (CDP)
 
 ## Folder Structure
+
 ```
 [root]/
 ├── src/
@@ -95,6 +102,7 @@ Test files are **co-located** with the module they test (e.g. `controller.test.j
 ## Code Standards
 
 ### Templates
+
 - Use Nunjucks macros from GOV.UK Design System
 - Always include macro imports at the top of templates:
   ```nunjucks
@@ -107,14 +115,17 @@ Test files are **co-located** with the module they test (e.g. `controller.test.j
 **Core Principle:** Maximize style reuse. Minimize new styles.
 
 **Class Naming:**
+
 - Custom classes: prefix with `app-`
 
 **Styling Priority (Follow in Order):**
+
 1. **Reuse existing app styles** - Always check first. Prefer consistency over perfect design match.
 2. **Use GOV.UK Design System** - Search `node_modules/govuk-frontend` for applicable styles.
 3. **Never create new styles** - ONLY as last resort. Requires user approval. Must use `app-` prefix.
 
 **Rules:**
+
 - Never rewrite or duplicate existing styles
 - Add new styles only when absolutely necessary
 - Seek explicit approval before creating any new `app-` classes
@@ -125,6 +136,7 @@ Test files are **co-located** with the module they test (e.g. `controller.test.j
 **Reference:** Follow the [Air Quality Team JavaScript Style Guide](javascript.md)
 
 **Key Points:**
+
 - Use ES modules (`import`/`export`), not CommonJS (`require`/`module.exports`)
 - No semicolons at end of statements
 - 2 spaces indentation, no tabs
@@ -138,23 +150,28 @@ Test files are **co-located** with the module they test (e.g. `controller.test.j
 - JSDoc comments for functions and classes (pragmatic approach)
 
 **Testing:**
+
 - Use Vitest for all JavaScript tests
 - Test files are **co-located** with the module under test (e.g. `controller.test.js` alongside `controller.js`)
 - File naming: `[module-name].test.js`
 
 **Dependency Management:**
+
 - Pin dependencies to exact versions in `package.json`
 - No range specifiers (`^`, `~`)
 
 ### Formatting Standards
+
 - Nunjucks templates: 2 spaces indentation, no tabs
 - SCSS: 2 spaces indentation, no tabs
 
 ### Code Organization
+
 - Define and reuse Nunjucks filters (e.g., `toMonth`, `toMoney`)
 - Separate data from presentation
 
 ### Validation & Accessibility
+
 - Return validation errors with `govukErrorSummary`
 - Add per-field error items
 - All code must meet WCAG 2.2 Level AA — see [Team-Wide Standards](#accessibility--wcag-22-level-aa) for specific criteria
@@ -165,6 +182,7 @@ Test files are **co-located** with the module they test (e.g. `controller.test.j
   - All inputs properly labelled
 
 ### Content Design
+
 - Follow GOV.UK style guide with adaptations for internal users:
   - Sentence case
   - ISO date format (e.g., "24 April 2025")
@@ -180,7 +198,9 @@ Test files are **co-located** with the module they test (e.g. `controller.test.j
   - Focus on task completion rather than extensive explanation
 
 ### UI Components
+
 Use GOV.UK Design System components for:
+
 - Form elements (inputs, checkboxes, radio buttons)
 - Error messages and validation feedback
 - Success messages and confirmation screens
@@ -189,14 +209,18 @@ Use GOV.UK Design System components for:
 - Progress indicators and loading states
 
 ## Development Workflow
+
 When working with this codebase:
+
 - **Search existing patterns** before creating new components
 - **Reuse established components** and layouts where possible
 - **Test accessibility** with screen readers and keyboard navigation
 - **Validate against** GOV.UK Design System documentation
 
 ## File Creation Guidelines
+
 When creating:
+
 - **New feature/page**: Create folder in `src/server/routes/[feature-name]/` containing:
   - `index.js` - Plugin registration and route definitions
   - `controller.js` - Route handlers (GET/POST controllers)
@@ -211,7 +235,9 @@ When creating:
 - **Shared test utilities**: Add to `test-helpers/`
 
 ## Quality Checklist
+
 Before suggesting any code changes, ensure:
+
 - [ ] Accessibility requirements are met
 - [ ] GOV.UK Design System components are used correctly
 - [ ] Content follows government style guide
