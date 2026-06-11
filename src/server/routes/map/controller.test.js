@@ -1,7 +1,7 @@
 import { createServer } from '../../server.js'
 import { statusCodes } from '../../common/constants/status-codes.js'
 
-describe('#aboutController', () => {
+describe('#mapController', () => {
   let server
 
   beforeAll(async () => {
@@ -13,13 +13,13 @@ describe('#aboutController', () => {
     await server.stop({ timeout: 0 })
   })
 
-  test('Should provide expected response', async () => {
+  test('Should return 200 for GET /map', async () => {
     const { result, statusCode } = await server.inject({
       method: 'GET',
-      url: '/about'
+      url: '/map'
     })
 
-    expect(result).toEqual(expect.stringContaining('About |'))
     expect(statusCode).toBe(statusCodes.ok)
+    expect(result).toEqual(expect.stringContaining('Air quality map'))
   })
 })

@@ -11,14 +11,20 @@ const contentSecurityPolicy = {
     // https://frontend.design-system.service.gov.uk/import-javascript/#if-our-inline-javascript-snippet-is-blocked-by-a-content-security-policy
     defaultSrc: ['self'],
     fontSrc: ['self', 'data:'],
-    connectSrc: ['self', 'wss', 'data:'],
+    // wss — WebSocket for Vite HMR in dev. tiles.openfreemap.org — MapLibre tile/style requests.
+    connectSrc: ['self', 'wss', 'data:', 'https://tiles.openfreemap.org'],
     mediaSrc: ['self'],
     styleSrc: ['self'],
     scriptSrc: [
       'self',
+      // MapLibre GL requires blob: for its web worker
+      "'blob:'",
       "'sha256-GUQ5ad8JK5KmEWmROf3LZd9ge94daqNvd8xy9YS1iDw='"
     ],
-    imgSrc: ['self', 'data:'],
+    // MapLibre GL spawns a web worker from a blob: URL — without this the map silently fails to render
+    workerSrc: ['self', "'blob:'"],
+    // Map tile images are loaded from OpenFreeMap
+    imgSrc: ['self', 'data:', 'https://tiles.openfreemap.org'],
     frameSrc: ['self', 'data:'],
     objectSrc: ['none'],
     frameAncestors: ['none'],
