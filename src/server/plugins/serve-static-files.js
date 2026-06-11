@@ -36,6 +36,23 @@ export const serveStaticFiles = {
               redirectToSlash: true
             }
           }
+        },
+        {
+          options: {
+            auth: false,
+            cache: {
+              expiresIn: config.get('staticCacheTimeout'),
+              privacy: 'private'
+            }
+          },
+          method: 'GET',
+          path: '/map-assets/{param*}',
+          handler: {
+            directory: {
+              path: 'node_modules/@defra/interactive-map',
+              redirectToSlash: true
+            }
+          }
         }
       ])
     }
