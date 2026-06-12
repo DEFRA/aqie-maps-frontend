@@ -3,7 +3,7 @@ import inert from '@hapi/inert'
 import { home } from '../routes/home/index.js'
 import { about } from '../routes/about/index.js'
 import { health } from '../routes/health/index.js'
-import { serveStaticFiles } from './serve-static-files.js'
+import { serveStaticFiles, serveMapAssets } from './serve-static-files.js'
 import { config } from '../../config/config.js'
 import { map } from '../routes/map/index.js'
 
@@ -18,6 +18,8 @@ export const router = {
 
       // Application specific routes, add your own routes here
       await server.register([home, about, map])
+
+      await server.register([serveMapAssets])
 
       // Static assets
       if (!config.get('isProduction') && !config.get('isTest')) {

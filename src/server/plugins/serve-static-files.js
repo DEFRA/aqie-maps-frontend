@@ -1,5 +1,11 @@
+import { fileURLToPath } from 'node:url'
+import { dirname, resolve } from 'node:path'
+
 import { config } from '../../config/config.js'
 import { statusCodes } from '../common/constants/status-codes.js'
+
+const dir = dirname(fileURLToPath(import.meta.url))
+const projectRoot = resolve(dir, '../../..')
 
 export const serveStaticFiles = {
   plugin: {
@@ -36,7 +42,17 @@ export const serveStaticFiles = {
               redirectToSlash: true
             }
           }
-        },
+        }
+      ])
+    }
+  }
+}
+
+export const serveMapAssets = {
+  plugin: {
+    name: 'mapAssets',
+    register(server) {
+      server.route([
         {
           options: {
             auth: false,
@@ -49,7 +65,7 @@ export const serveStaticFiles = {
           path: '/map-assets/{param*}',
           handler: {
             directory: {
-              path: 'node_modules/@defra/interactive-map',
+              path: resolve(projectRoot, 'node_modules/@defra/interactive-map'),
               redirectToSlash: true
             }
           }
