@@ -1,3 +1,4 @@
+/* global defra */
 const map = new defra.InteractiveMap('map', {
   mapProvider: defra.maplibreProvider(),
   behaviour: 'hybrid',

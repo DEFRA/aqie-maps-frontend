@@ -19,7 +19,6 @@ const contentSecurityPolicy = {
     ],
     workerSrc: ['self', 'blob:'],
     imgSrc: ['self', 'data:', 'https://tiles.openfreemap.org'],
-    imgSrc: ['self', 'data:', 'https://tiles.openfreemap.org'],
     frameSrc: ['self', 'data:'],
     objectSrc: ['none'],
     frameAncestors: ['none'],
