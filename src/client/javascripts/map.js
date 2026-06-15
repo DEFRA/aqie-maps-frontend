@@ -1,10 +1,14 @@
 /* global defra */
+const defaultZoom = 5.4842222
+const ukCentreLng = -1.4649
+const ukCentreLat = 52.5619
+
 const map = new defra.InteractiveMap('map', {
   mapProvider: defra.maplibreProvider(),
   behaviour: 'hybrid',
   mapLabel: 'United Kingdom',
-  zoom: 5.4842222,
-  center: [-1.4649, 52.5619],
+  zoom: defaultZoom,
+  center: [ukCentreLng, ukCentreLat],
   containerHeight: '100%',
   mapStyle: {
     url: 'https://tiles.openfreemap.org/styles/liberty',
