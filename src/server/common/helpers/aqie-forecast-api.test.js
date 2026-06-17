@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest'
 const mockGet = vi.fn()
 
 vi.mock('./http-client.js', () => ({
-  get: mockGet
+  getJson: mockGet
 }))
 
 const mockConfigGet = vi.fn()
@@ -53,10 +53,7 @@ describe('#aqieForecastApiHelper', () => {
     const { getForecasts } = await import('./aqie-forecast-api.js')
     const result = await getForecasts()
 
-    expect(mockGet).toHaveBeenCalledWith(
-      'http://localhost:3002',
-      '/forecast'
-    )
+    expect(mockGet).toHaveBeenCalledWith('http://localhost:3002', '/forecast')
     expect(result).toEqual(payload)
   })
 
@@ -67,10 +64,7 @@ describe('#aqieForecastApiHelper', () => {
     const { getForecasts } = await import('./aqie-forecast-api.js')
     await getForecasts()
 
-    expect(mockGet).toHaveBeenCalledWith(
-      'http://localhost:3001',
-      '/forecasts'
-    )
+    expect(mockGet).toHaveBeenCalledWith('http://localhost:3001', '/forecasts')
   })
 
   test('Should throw when upstream returns non-2xx response', async () => {

@@ -6,7 +6,7 @@ function buildUrl(baseUrl, path) {
   return new URL(path, baseUrl).toString()
 }
 
-async function get(baseUrl, path, timeoutMs = defaultTimeoutMs) {
+async function getJson(baseUrl, path, timeoutMs = defaultTimeoutMs) {
   if (!baseUrl) {
     throw new Error(`Missing base URL for ${path}`)
   }
@@ -25,4 +25,4 @@ async function get(baseUrl, path, timeoutMs = defaultTimeoutMs) {
   return body.json()
 }
 
-export { get }
+export { getJson }

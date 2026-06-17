@@ -1,15 +1,15 @@
-import { get } from './http-client.js'
+import { getJson } from './http-client.js'
 
 import { config } from '../../../config/config.js'
 
 const monitoringStationInfoTimeoutMs = 120000
 
 async function getMonitoringStations() {
-  return get(config.get('aqieBackEnd.url'), '/monitoringStations')
+  return getJson(config.get('aqieBackEnd.url'), '/monitoringStations')
 }
 
 async function getMonitoringStationInfo() {
-  return get(
+  return getJson(
     config.get('aqieBackEnd.url'),
     '/monitoringStationInfo',
     monitoringStationInfoTimeoutMs

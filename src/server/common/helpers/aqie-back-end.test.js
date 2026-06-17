@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest'
 const mockGet = vi.fn()
 
 vi.mock('./http-client.js', () => ({
-  get: mockGet
+  getJson: mockGet
 }))
 
 const mockConfigGet = vi.fn()
