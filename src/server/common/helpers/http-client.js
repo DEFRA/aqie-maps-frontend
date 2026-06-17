@@ -1,4 +1,5 @@
 import { request } from 'undici'
+import { statusCodes } from '../constants/status-codes.js'
 
 const defaultTimeoutMs = 5000
 
@@ -18,7 +19,7 @@ async function getJson(baseUrl, path, timeoutMs = defaultTimeoutMs) {
     bodyTimeout: timeoutMs
   })
 
-  if (statusCode < 200 || statusCode >= 300) {
+  if (statusCode !== statusCodes.ok) {
     throw new Error(`${url} responded ${statusCode}`)
   }
 

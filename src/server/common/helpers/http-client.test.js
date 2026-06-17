@@ -62,7 +62,19 @@ describe('#httpClient', () => {
     )
   })
 
-  test('Should throw when upstream returns non-2xx response', async () => {
+  test('Should throw when upstream returns no content response', async () => {
+    mockRequest.mockResolvedValueOnce({
+      statusCode: 204,
+      body: { json: mockJson }
+    })
+
+    const { getJson } = await import('./http-client.js')
+    await expect(getJson('http://localhost:3001', '/health')).rejects.toThrow(
+      'http://localhost:3001/health responded 204'
+    )
+  })
+
+  test('Should throw when upstream returns non-200 response', async () => {
     mockRequest.mockResolvedValueOnce({
       statusCode: 500,
       body: { json: mockJson }
