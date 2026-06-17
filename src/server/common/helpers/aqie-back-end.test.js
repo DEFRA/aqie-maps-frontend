@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
-const mockRequest = vi.fn()
+const mockGet = vi.fn()
 
-vi.mock('undici', () => ({
-  request: mockRequest
+vi.mock('./http-client.js', () => ({
+  get: mockGet
 }))
 
 const mockConfigGet = vi.fn()
@@ -14,16 +14,8 @@ vi.mock('../../../config/config.js', () => ({
   }
 }))
 
-const mockJson = vi.fn()
-
 function mockOkResponse(payload) {
-  mockJson.mockResolvedValueOnce(payload)
-  mockRequest.mockResolvedValueOnce({
-    statusCode: 200,
-    body: {
-      json: mockJson
-    }
-  })
+  mockGet.mockResolvedValueOnce(payload)
 }
 
 describe('#aqieBackEndHelper', () => {
@@ -46,9 +38,9 @@ describe('#aqieBackEndHelper', () => {
     const { getMonitoringStations } = await import('./aqie-back-end.js')
     const result = await getMonitoringStations()
 
-    expect(mockRequest).toHaveBeenCalledWith(
-      'http://localhost:3001/monitoringStations',
-      expect.objectContaining({ method: 'GET' })
+    expect(mockGet).toHaveBeenCalledWith(
+      'http://localhost:3001',
+      '/monitoringStations'
     )
     expect(result).toEqual(payload)
   })
@@ -60,23 +52,17 @@ describe('#aqieBackEndHelper', () => {
     const { getMonitoringStationInfo } = await import('./aqie-back-end.js')
     await getMonitoringStationInfo()
 
-    expect(mockRequest).toHaveBeenCalledWith(
-      'http://localhost:3001/monitoringStationInfo',
-      expect.objectContaining({
-        method: 'GET',
-        headersTimeout: 120000,
-        bodyTimeout: 120000
-      })
+    expect(mockGet).toHaveBeenCalledWith(
+      'http://localhost:3001',
+      '/monitoringStationInfo',
+      120000
     )
   })
 
   test('Should throw when upstream returns non-2xx response', async () => {
-    mockRequest.mockResolvedValueOnce({
-      statusCode: 500,
-      body: {
-        json: mockJson
-      }
-    })
+    mockGet.mockRejectedValueOnce(
+      new Error('http://localhost:3001/monitoringStations responded 500')
+    )
 
     const { getMonitoringStations } = await import('./aqie-back-end.js')
 

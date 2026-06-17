@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
-const mockRequest = vi.fn()
+const mockGet = vi.fn()
 
-vi.mock('undici', () => ({
-  request: mockRequest
+vi.mock('./http-client.js', () => ({
+  get: mockGet
 }))
 
 const mockConfigGet = vi.fn()
@@ -14,16 +14,8 @@ vi.mock('../../../config/config.js', () => ({
   }
 }))
 
-const mockJson = vi.fn()
-
 function mockOkResponse(payload) {
-  mockJson.mockResolvedValueOnce(payload)
-  mockRequest.mockResolvedValueOnce({
-    statusCode: 200,
-    body: {
-      json: mockJson
-    }
-  })
+  mockGet.mockResolvedValueOnce(payload)
 }
 
 describe('#aqieForecastApiHelper', () => {
@@ -61,9 +53,9 @@ describe('#aqieForecastApiHelper', () => {
     const { getForecasts } = await import('./aqie-forecast-api.js')
     const result = await getForecasts()
 
-    expect(mockRequest).toHaveBeenCalledWith(
-      'http://localhost:3002/forecast',
-      expect.objectContaining({ method: 'GET' })
+    expect(mockGet).toHaveBeenCalledWith(
+      'http://localhost:3002',
+      '/forecast'
     )
     expect(result).toEqual(payload)
   })
@@ -75,9 +67,9 @@ describe('#aqieForecastApiHelper', () => {
     const { getForecasts } = await import('./aqie-forecast-api.js')
     await getForecasts()
 
-    expect(mockRequest).toHaveBeenCalledWith(
-      'http://localhost:3001/forecasts',
-      expect.objectContaining({ method: 'GET' })
+    expect(mockGet).toHaveBeenCalledWith(
+      'http://localhost:3001',
+      '/forecasts'
     )
   })
 
@@ -89,12 +81,9 @@ describe('#aqieForecastApiHelper', () => {
 
       return 'http://localhost:3001'
     })
-    mockRequest.mockResolvedValueOnce({
-      statusCode: 500,
-      body: {
-        json: mockJson
-      }
-    })
+    mockGet.mockRejectedValueOnce(
+      new Error('http://localhost:3002/forecast responded 500')
+    )
 
     const { getForecasts } = await import('./aqie-forecast-api.js')
 
