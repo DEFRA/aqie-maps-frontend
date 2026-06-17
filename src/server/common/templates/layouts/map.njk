@@ -1,0 +1,19 @@
+{% extends "govuk/template.njk" %}
+
+{% block pageTitle %}{{ pageTitle }} | {{ serviceName }}{% endblock %}
+
+{% block head %}
+  <link href="{{ getAssetPath('src/client/stylesheets/application.scss') }}" rel="stylesheet">
+  <link href="/map-assets/dist/css/index.css" rel="stylesheet">
+{% endblock %}
+
+{% block skipLink %}{% endblock %}
+{% block header %}{% endblock %}
+{% block content %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block bodyEnd %}
+  <script src="/map-assets/dist/umd/index.js"></script>
+  <script src="/map-assets/providers/maplibre/dist/umd/index.js"></script>
+  <script src="{{ getAssetPath('src/client/javascripts/map.js') }}" type="module"></script>
+{% endblock %}

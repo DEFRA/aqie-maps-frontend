@@ -33,6 +33,7 @@ This guide is an extension to the [Defra JavaScript Standards](https://defra.git
     - [2.1.4 Semicolons](#214-semicolons)
     - [2.1.5 Line Length Limit](#215-line-length-limit)
   - [2.2 Variable Declarations](#22-variable-declarations)
+    - [2.2.1 No Magic Numbers](#221-no-magic-numbers)
   - [2.3 Functions](#23-functions)
     - [2.3.1 Function Declarations](#231-function-declarations)
     - [2.3.2 Function Expressions](#232-function-expressions)
@@ -311,6 +312,31 @@ Don't do this:
 ```javascript
 var myVariable = 'Hello, world!'
 ```
+
+#### 2.2.1 No Magic Numbers
+
+Do not use unexplained numeric (or string) literals directly in logic. Assign them to a named `const` that communicates their meaning.
+
+Do this:
+
+```javascript
+const maxRetries = 3
+const timeoutMs = 5000
+
+if (attempts > maxRetries) {
+  throw new Error('Max retries exceeded')
+}
+```
+
+Don't do this:
+
+```javascript
+if (attempts > 3) {
+  throw new Error('Max retries exceeded')
+}
+```
+
+Exceptions: `0`, `1`, and `-1` are acceptable in clearly self-evident contexts (e.g. array indexing, incrementing, guard clauses). All other literals should be named.
 
 ### 2.3 Functions
 
