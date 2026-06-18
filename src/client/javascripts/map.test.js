@@ -86,13 +86,13 @@ describe('#map initialisation', () => {
     )
   })
 
-  test('Should call loadMonitoringStations immediately on load', () => {
+  test('Should fetch monitoring stations on load', () => {
     expect(fetch).toHaveBeenCalledWith('/api/monitoring-stations')
   })
 })
 
-describe('#loadMonitoringStations', () => {
-  test('Should add markers when map:ready fires after stations load', async () => {
+describe('#monitoring stations', () => {
+  test('Should add markers when map:firstidle fires', async () => {
     const stations = [
       { localSiteID: 'UKA001', location: { coordinates: [51.5, -0.1] } }
     ]
@@ -105,43 +105,11 @@ describe('#loadMonitoringStations', () => {
     )
     vi.resetModules()
     await import('./map.js')
-    // wait for the fetch microtask to settle
-    await Promise.resolve()
-    await Promise.resolve()
     mapReadyCallback()
     expect(mockMapInstance.addMarker).toHaveBeenCalledWith(
       'ms-UKA001',
       [-0.1, 51.5],
       expect.objectContaining({ viewBox: '0 0 38 38', anchor: [0.5, 0.5] })
-    )
-  })
-
-  test('Should add markers immediately when stations load after map:ready', async () => {
-    let resolveFetch
-    const fetchPromise = new Promise((resolve) => {
-      resolveFetch = resolve
-    })
-    vi.stubGlobal('fetch', vi.fn().mockReturnValue(fetchPromise))
-    vi.resetModules()
-    await import('./map.js')
-    // fire map:ready before fetch resolves
-    mapReadyCallback()
-    expect(mockMapInstance.addMarker).not.toHaveBeenCalled()
-    // now resolve fetch
-    resolveFetch({
-      ok: true,
-      json: vi.fn().mockResolvedValue({
-        stations: [
-          { localSiteID: 'UKA001', location: { coordinates: [51.5, -0.1] } }
-        ]
-      })
-    })
-    await Promise.resolve()
-    await Promise.resolve()
-    expect(mockMapInstance.addMarker).toHaveBeenCalledWith(
-      'ms-UKA001',
-      [-0.1, 51.5],
-      expect.objectContaining({ viewBox: '0 0 38 38' })
     )
   })
 
@@ -161,8 +129,6 @@ describe('#loadMonitoringStations', () => {
     )
     vi.resetModules()
     await import('./map.js')
-    await Promise.resolve()
-    await Promise.resolve()
     mapReadyCallback()
     expect(mockMapInstance.addMarker).toHaveBeenCalledWith(
       'ms-UKA001',
@@ -184,8 +150,6 @@ describe('#loadMonitoringStations', () => {
     )
     vi.resetModules()
     await import('./map.js')
-    await Promise.resolve()
-    await Promise.resolve()
     mapReadyCallback()
     expect(mockMapInstance.addMarker.mock.calls[0][0]).toBe('ms-MY_SITE')
     expect(mockMapInstance.addMarker.mock.calls[0][2]).toMatchObject({
@@ -207,8 +171,6 @@ describe('#loadMonitoringStations', () => {
     )
     vi.resetModules()
     await import('./map.js')
-    await Promise.resolve()
-    await Promise.resolve()
     mapReadyCallback()
     expect(mockMapInstance.addMarker).toHaveBeenCalledTimes(1)
     expect(mockMapInstance.addMarker).toHaveBeenCalledWith(
@@ -232,8 +194,6 @@ describe('#loadMonitoringStations', () => {
     )
     vi.resetModules()
     await import('./map.js')
-    await Promise.resolve()
-    await Promise.resolve()
     mapReadyCallback()
     expect(mockMapInstance.addMarker).toHaveBeenCalledTimes(1)
   })
@@ -252,8 +212,6 @@ describe('#loadMonitoringStations', () => {
     )
     vi.resetModules()
     await import('./map.js')
-    await Promise.resolve()
-    await Promise.resolve()
     mapReadyCallback()
     expect(mockMapInstance.addMarker).toHaveBeenCalledTimes(1)
   })
@@ -262,8 +220,6 @@ describe('#loadMonitoringStations', () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false }))
     vi.resetModules()
     await import('./map.js')
-    await Promise.resolve()
-    await Promise.resolve()
     mapReadyCallback()
     expect(mockMapInstance.addMarker).not.toHaveBeenCalled()
   })
@@ -276,8 +232,6 @@ describe('#loadMonitoringStations', () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
     vi.resetModules()
     await expect(import('./map.js')).resolves.not.toThrow()
-    await Promise.resolve()
-    await Promise.resolve()
     mapReadyCallback()
     expect(mockMapInstance.addMarker).not.toHaveBeenCalled()
     expect(warnSpy).toHaveBeenCalledWith(
@@ -297,8 +251,6 @@ describe('#loadMonitoringStations', () => {
     )
     vi.resetModules()
     await import('./map.js')
-    await Promise.resolve()
-    await Promise.resolve()
     mapReadyCallback()
     expect(mockMapInstance.addMarker).not.toHaveBeenCalled()
   })
