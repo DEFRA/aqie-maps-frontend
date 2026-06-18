@@ -130,13 +130,11 @@ describe('#loadMonitoringStations', () => {
     // now resolve fetch
     resolveFetch({
       ok: true,
-      json: vi
-        .fn()
-        .mockResolvedValue({
-          stations: [
-            { localSiteID: 'UKA001', location: { coordinates: [51.5, -0.1] } }
-          ]
-        })
+      json: vi.fn().mockResolvedValue({
+        stations: [
+          { localSiteID: 'UKA001', location: { coordinates: [51.5, -0.1] } }
+        ]
+      })
     })
     await Promise.resolve()
     await Promise.resolve()

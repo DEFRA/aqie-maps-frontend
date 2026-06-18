@@ -61,8 +61,12 @@ function stationMapCoords(station) {
  */
 function hasValidCoords(station) {
   const coords = station.location?.coordinates
-  if (!Array.isArray(coords) || coords.length !== 2) { return false }
-  if (!isFinite(coords[0]) || !isFinite(coords[1])) { return false }
+  if (!Array.isArray(coords) || coords.length !== 2) {
+    return false
+  }
+  if (!isFinite(coords[0]) || !isFinite(coords[1])) {
+    return false
+  }
   return true
 }
 
@@ -85,7 +89,9 @@ let stationList = null
  */
 function plotStationMarkers() {
   stationList.forEach((station) => {
-    if (!hasValidCoords(station)) { return }
+    if (!hasValidCoords(station)) {
+      return
+    }
     map.addMarker(
       stationMarkerId(station),
       stationMapCoords(station),
@@ -104,11 +110,15 @@ function plotStationMarkers() {
 async function loadMonitoringStations() {
   try {
     const response = await fetch('/api/monitoring-stations')
-    if (!response.ok) { return }
+    if (!response.ok) {
+      return
+    }
     const { stations = [] } = await response.json()
     stationList = stations
     // If the map is already idle, plot immediately; otherwise map:firstidle will.
-    if (mapReady) { plotStationMarkers() }
+    if (mapReady) {
+      plotStationMarkers()
+    }
   } catch (err) {
     // stations are optional — map still loads without them
     console.warn('Failed to load monitoring stations', err)
@@ -119,7 +129,9 @@ async function loadMonitoringStations() {
 // If the station fetch already completed, plot markers straight away.
 map.on('map:firstidle', () => {
   mapReady = true
-  if (stationList) { plotStationMarkers() }
+  if (stationList) {
+    plotStationMarkers()
+  }
 })
 
 // Start the fetch concurrently with map tile loading — not awaited intentionally.
