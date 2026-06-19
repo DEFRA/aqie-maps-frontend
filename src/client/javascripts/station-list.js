@@ -118,7 +118,7 @@ function buildAreaDetails(areaName, stations) {
  * @returns {{ tagLabel: string, tagClass: string }}
  */
 function stationTagInfo(statusRaw) {
-  let tagLabel = ''
+  let tagLabel
   if (statusRaw === 'current') {
     tagLabel = 'Active'
   } else if (statusRaw) {
@@ -127,7 +127,7 @@ function stationTagInfo(statusRaw) {
     tagLabel = ''
   }
 
-  let tagClass = ''
+  let tagClass
   if (statusRaw === 'current') {
     tagClass = 'aq-station-tag--active'
   } else if (statusRaw === 'closed') {
