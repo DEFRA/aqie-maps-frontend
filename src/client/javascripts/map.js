@@ -4,6 +4,12 @@ const defaultZoom = 5.4842222
 const ukCentreLng = -1.4649
 const ukCentreLat = 52.5619
 
+// Maximum distance (degrees) between a station and a forecast point to be considered a match.
+const FORECAST_MATCH_RADIUS_DEG = 0.05
+
+// Maximum squared distance (degrees²) for a map click to select a station (~11 km at mid zoom).
+const CLICK_SELECT_MAX_SQUARED_DEG = 0.01
+
 const map = new defra.InteractiveMap('map', {
   mapProvider: defra.maplibreProvider(),
   behaviour: 'hybrid',
@@ -154,7 +160,7 @@ function forecastForStation(station) {
   const sLat = Number.parseFloat(station.location.coordinates[0])
   const sLng = Number.parseFloat(station.location.coordinates[1])
   let best = null
-  let bestDist = 0.05 * 0.05
+  let bestDist = FORECAST_MATCH_RADIUS_DEG * FORECAST_MATCH_RADIUS_DEG
   forecasts.forEach((entry) => {
     if (!entry.location?.coordinates) {
       return
@@ -395,17 +401,13 @@ function stationStatusTag(status, isClosed) {
       ? 'Active'
       : status.charAt(0).toUpperCase() + status.slice(1)
 
-  const tagClass =
-    status === 'current'
-      ? 'aq-station-tag--active'
-      : isClosed
-        ? 'aq-station-tag--closed'
-        : ''
-
-  if (!tagClass) {
-    return ''
+  if (status === 'current') {
+    return ` <strong class="aq-station-tag aq-station-tag--active">${escapeHtml(tagLabel)}</strong>`
   }
-  return ` <strong class="aq-station-tag ${tagClass}">${escapeHtml(tagLabel)}</strong>`
+  if (isClosed) {
+    return ` <strong class="aq-station-tag aq-station-tag--closed">${escapeHtml(tagLabel)}</strong>`
+  }
+  return ''
 }
 
 /**
@@ -589,8 +591,8 @@ map.on('map:click', (evt) => {
       best = station
     }
   })
-  // sqrt(0.01) ≈ 0.1 degrees ≈ 11 km — reasonable click target at mid zoom
-  if (best && bestDist < 0.01) {
+  // sqrt(CLICK_SELECT_MAX_SQUARED_DEG) ≈ 0.1 degrees ≈ 11 km — reasonable click target at mid zoom
+  if (best && bestDist < CLICK_SELECT_MAX_SQUARED_DEG) {
     highlightStation(best)
   }
 })
