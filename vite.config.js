@@ -11,7 +11,8 @@ export default defineConfig({
         htmlAssets: 'src/client/assets.html',
         application: 'src/client/javascripts/application.js',
         applicationCss: 'src/client/stylesheets/application.scss',
-        map: 'src/client/javascripts/map.js'
+        map: 'src/client/javascripts/map.js',
+        stationList: 'src/client/javascripts/station-list.js'
       }
     },
     sourcemap: true
