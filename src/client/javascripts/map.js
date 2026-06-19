@@ -200,11 +200,13 @@ function stationDaqi(station) {
 // Whether the user manually closed the key overlay (prevents auto-reopen on panel close).
 let keyClosedByUser = false
 
+const MAP_KEY_OVERLAY_ID = 'map-key-overlay'
+
 /**
  * Shows the map key overlay.
  */
 function showKeyOverlay() {
-  const overlay = document.getElementById('map-key-overlay')
+  const overlay = document.getElementById(MAP_KEY_OVERLAY_ID)
   if (overlay) {
     overlay.hidden = false
   }
@@ -215,7 +217,7 @@ function showKeyOverlay() {
  * @param {boolean} byUser - true when the user explicitly dismissed it
  */
 function hideKeyOverlay(byUser) {
-  const overlay = document.getElementById('map-key-overlay')
+  const overlay = document.getElementById(MAP_KEY_OVERLAY_ID)
   if (overlay) {
     overlay.hidden = true
   }
@@ -271,7 +273,7 @@ function renderKeyOverlay() {
  * Initialises the map key overlay with a close button and DAQI scale.
  */
 function initKeyOverlay() {
-  const overlay = document.getElementById('map-key-overlay')
+  const overlay = document.getElementById(MAP_KEY_OVERLAY_ID)
   if (!overlay) {
     return
   }
@@ -312,7 +314,7 @@ function initReopenStack() {
     '<span class="reopen-text">Key</span>' +
     '</button>'
   document.getElementById('key-button').addEventListener('click', () => {
-    const overlay = document.getElementById('map-key-overlay')
+    const overlay = document.getElementById(MAP_KEY_OVERLAY_ID)
     if (overlay?.hidden) {
       keyClosedByUser = false
       showKeyOverlay()
@@ -371,6 +373,8 @@ function formatDate(dateStr) {
   })
 }
 
+const NOT_AVAILABLE = 'Not available'
+
 const pollutantLabels = {
   NO2: 'NO₂',
   O3: 'O₃',
@@ -386,24 +390,50 @@ const pollutantLabels = {
  * @returns {string}
  */
 function stationStatusTag(status, isClosed) {
-  let tagLabel = ''
-  if (status === 'current') {
-    tagLabel = 'Active'
-  } else if (status) {
-    tagLabel = status.charAt(0).toUpperCase() + status.slice(1)
-  }
+  const tagLabel =
+    status === 'current'
+      ? 'Active'
+      : status.charAt(0).toUpperCase() + status.slice(1)
 
-  let tagClass = ''
-  if (status === 'current') {
-    tagClass = 'aq-station-tag--active'
-  } else if (isClosed) {
-    tagClass = 'aq-station-tag--closed'
-  }
+  const tagClass =
+    status === 'current'
+      ? 'aq-station-tag--active'
+      : isClosed
+        ? 'aq-station-tag--closed'
+        : ''
 
   if (!tagClass) {
     return ''
   }
   return ` <strong class="aq-station-tag ${tagClass}">${escapeHtml(tagLabel)}</strong>`
+}
+
+/**
+ * Builds the DAQI detail row for the station panel, or null if unavailable.
+ * @param {object} station
+ * @returns {Array|null}
+ */
+function buildDaqiRow(station) {
+  const forecast = forecastForStation(station)
+  if (
+    !forecast ||
+    !Array.isArray(forecast.forecast) ||
+    forecast.forecast.length === 0
+  ) {
+    return null
+  }
+  const todayValue = forecast.forecast[0].value
+  const band = daqiBand[todayValue] || ''
+  const bandKey = band.toLowerCase().replaceAll(' ', '')
+  const daqiClass = bandKey
+    ? `aq-daqi-tag aq-daqi-tag--${bandKey}`
+    : 'aq-daqi-tag'
+  const bandSuffix = band ? ` (${band.toLowerCase()})` : ''
+  return [
+    'DAQI',
+    `<span class="${daqiClass}">${todayValue}${bandSuffix}</span>`,
+    true
+  ]
 }
 
 /**
@@ -428,35 +458,23 @@ function buildPanelRows(station, isClosed) {
   }
 
   if (!isClosed) {
-    const forecast = forecastForStation(station)
-    if (
-      forecast &&
-      Array.isArray(forecast.forecast) &&
-      forecast.forecast.length > 0
-    ) {
-      const todayValue = forecast.forecast[0].value
-      const band = daqiBand[todayValue] || ''
-      const bandKey = band.toLowerCase().replaceAll(' ', '')
-      const daqiClass = bandKey
-        ? `aq-daqi-tag aq-daqi-tag--${bandKey}`
-        : 'aq-daqi-tag'
-      const bandSuffix = band ? ` (${band.toLowerCase()})` : ''
-      const daqiHtml = `<span class="${daqiClass}">${todayValue}${bandSuffix}</span>`
-      rows.push(['DAQI', daqiHtml, true])
+    const daqiRow = buildDaqiRow(station)
+    if (daqiRow) {
+      rows.push(daqiRow)
     }
   }
 
-  rows.push(['Local authority', station.localAuthority || 'Not available'])
+  rows.push(['Local authority', station.localAuthority || NOT_AVAILABLE])
   if (station.areaType) {
     rows.push(['Site type', station.areaType])
   }
   rows.push([
     'Start date',
-    station.openDate ? formatDate(station.openDate) : 'Not available'
+    station.openDate ? formatDate(station.openDate) : NOT_AVAILABLE
   ])
   const endDate = station.closeDate
     ? formatDate(station.closeDate)
-    : 'Not available'
+    : NOT_AVAILABLE
   if (isClosed) {
     rows.push(['End date', endDate])
   }

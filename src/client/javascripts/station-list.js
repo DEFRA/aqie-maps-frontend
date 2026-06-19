@@ -113,6 +113,53 @@ function buildAreaDetails(areaName, stations) {
 }
 
 /**
+ * Returns the tag label and CSS class for a station's status.
+ * @param {string} statusRaw - lowercased station status
+ * @returns {{ tagLabel: string, tagClass: string }}
+ */
+function stationTagInfo(statusRaw) {
+  let tagLabel = ''
+  if (statusRaw === 'current') {
+    tagLabel = 'Active'
+  } else if (statusRaw) {
+    tagLabel = statusRaw.charAt(0).toUpperCase() + statusRaw.slice(1)
+  } else {
+    tagLabel = ''
+  }
+
+  let tagClass = ''
+  if (statusRaw === 'current') {
+    tagClass = 'aq-station-tag--active'
+  } else if (statusRaw === 'closed') {
+    tagClass = 'aq-station-tag--closed'
+  } else {
+    tagClass = ''
+  }
+
+  return { tagLabel, tagClass }
+}
+
+/**
+ * Returns a navigate button for stations with a valid location, or a plain text node.
+ * @param {object} s
+ * @returns {HTMLButtonElement|Text}
+ */
+function buildStationContent(s) {
+  if (s.location && Array.isArray(s.location.coordinates)) {
+    const btn = document.createElement('button')
+    btn.className = 'govuk-link'
+    btn.style.cssText =
+      'background:none;border:none;padding:0;cursor:pointer;font:inherit'
+    btn.textContent = s.name
+    btn.addEventListener('click', function () {
+      globalThis.navigateToStation(s)
+    })
+    return btn
+  }
+  return document.createTextNode(s.name || '')
+}
+
+/**
  * Builds an <li> element for a single station with a nav button and status tag.
  * @param {object} s
  * @returns {HTMLLIElement}
@@ -126,34 +173,9 @@ function buildStationItem(s) {
     s.siteStatus ||
     ''
   ).toLowerCase()
+  const { tagLabel, tagClass } = stationTagInfo(statusRaw)
 
-  let tagLabel = ''
-  if (statusRaw === 'current') {
-    tagLabel = 'Active'
-  } else if (statusRaw) {
-    tagLabel = statusRaw.charAt(0).toUpperCase() + statusRaw.slice(1)
-  }
-
-  let tagClass = ''
-  if (statusRaw === 'current') {
-    tagClass = 'aq-station-tag--active'
-  } else if (statusRaw === 'closed') {
-    tagClass = 'aq-station-tag--closed'
-  }
-
-  if (s.location && Array.isArray(s.location.coordinates)) {
-    const btn = document.createElement('button')
-    btn.className = 'govuk-link'
-    btn.style.cssText =
-      'background:none;border:none;padding:0;cursor:pointer;font:inherit'
-    btn.textContent = s.name
-    btn.addEventListener('click', function () {
-      globalThis.navigateToStation(s)
-    })
-    li.appendChild(btn)
-  } else {
-    li.appendChild(document.createTextNode(s.name || ''))
-  }
+  li.appendChild(buildStationContent(s))
 
   if (tagLabel && tagClass) {
     const tag = document.createElement('strong')
