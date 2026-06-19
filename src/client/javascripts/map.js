@@ -571,7 +571,9 @@ function highlightStation(station) {
   showStationPanel(station)
 }
 
-// On map click, find the nearest plotted station within ~11 km (0.1°) and select it.
+// On map click (canvas), find the nearest plotted station within ~11 km (0.1°) and select it.
+// Note: clicking directly on a station marker (DOM overlay) does not fire map:click —
+// that case is handled by the delegated listener below.
 map.on('map:click', (evt) => {
   if (!evt?.coords) {
     return
