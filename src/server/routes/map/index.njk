@@ -1,7 +1,13 @@
 {% extends 'layouts/map.njk' %}
 
 {% block content %}
+  <div hidden>
+    {% include "partials/station-list.njk" %}
+  </div>
   <div class="app-map-container">
     <div id="map"></div>
+    <div id="map-key-overlay" class="aq-map-key" role="region" aria-label="Map key"></div>
+    <div class="reopen-stack" aria-label="Map actions"></div>
+    {% include "partials/station-panel.njk" %}
   </div>
 {% endblock %}

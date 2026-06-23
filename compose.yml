@@ -3,7 +3,7 @@ services:
   floci:
     image: hectorvent/floci:latest-aws
     ports:
-      - '4566:4566'
+      - '4567:4567'
     env_file:
       - 'compose/aws.env'
     environment:
@@ -16,7 +16,7 @@ services:
   redis:
     image: redis:7.2.3-alpine3.18
     ports:
-      - '6379:6379'
+      - '6381:6381'
     networks:
       - cdp-tenant
 

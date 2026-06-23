@@ -195,6 +195,23 @@ export const config = convict({
       env: 'REDIS_TLS'
     }
   },
+  aqieBackEnd: {
+    url: {
+      doc: 'Base URL for the AQIE back-end service',
+      format: String,
+      default: 'http://localhost:3001',
+      env: 'AQIE_BACK_END_URL'
+    }
+  },
+  aqieForecastApi: {
+    url: {
+      doc: 'Base URL for the AQIE forecast API service',
+      format: String,
+      nullable: true,
+      default: null,
+      env: 'AQIE_FORECAST_API_URL'
+    }
+  },
   nunjucks: {
     watch: {
       doc: 'Reload templates when they are changed.',

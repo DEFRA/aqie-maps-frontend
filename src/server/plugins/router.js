@@ -6,6 +6,8 @@ import { health } from '../routes/health/index.js'
 import { serveStaticFiles, serveMapAssets } from './serve-static-files.js'
 import { config } from '../../config/config.js'
 import { map } from '../routes/map/index.js'
+import { monitoringStationsApi } from '../routes/api/monitoring-stations/index.js'
+import { forecastsApi } from '../routes/api/forecasts/index.js'
 
 export const router = {
   plugin: {
@@ -17,7 +19,13 @@ export const router = {
       await server.register([health])
 
       // Application specific routes, add your own routes here
-      await server.register([home, about, map])
+      await server.register([
+        home,
+        about,
+        map,
+        monitoringStationsApi,
+        forecastsApi
+      ])
 
       await server.register([serveMapAssets])
 

@@ -15,5 +15,6 @@
 {% block bodyEnd %}
   <script src="/map-assets/dist/umd/index.js"></script>
   <script src="/map-assets/providers/maplibre/dist/umd/index.js"></script>
+  <script src="{{ getAssetPath('src/client/javascripts/station-list.js') }}" type="module"></script>
   <script src="{{ getAssetPath('src/client/javascripts/map.js') }}" type="module"></script>
 {% endblock %}
