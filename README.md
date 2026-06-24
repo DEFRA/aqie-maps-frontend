@@ -174,7 +174,6 @@ curl -sS -o /dev/null -w "forecast-api (forecasts): %{http_code}\n" \
 
 Both should return `200`. A `500` means the upstream is reachable but returned an error; a connection error or `502` from inside a CDP terminal means the app process is not running — check logs for the startup error.
 
-
 ## SonarCloud
 
 Instructions for setting up SonarCloud can be found in [sonar-project.properties](./sonar-project.properties).
