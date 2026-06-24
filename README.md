@@ -148,6 +148,33 @@ instance of the service and it will not persist between restarts.
 We have added an example dependabot configuration file to the repository. You can enable it by renaming
 the [.github/example.dependabot.yml](.github/example.dependabot.yml) to `.github/dependabot.yml`
 
+## Checking upstream connectivity
+
+To verify the frontend can communicate with `aqie-back-end` and `aqie-forecast-api`, use the proxy endpoints the frontend exposes. These make server-side requests to the configured upstream URLs and return the results.
+
+**Locally** (default port 3000):
+
+```bash
+curl -sS -o /dev/null -w "back-end (monitoring stations): %{http_code}\n" \
+  http://localhost:3000/api/monitoring-stations
+
+curl -sS -o /dev/null -w "forecast-api (forecasts): %{http_code}\n" \
+  http://localhost:3000/api/forecasts
+```
+
+**On CDP** (substitute the environment hostname):
+
+```bash
+curl -sS -o /dev/null -w "back-end (monitoring stations): %{http_code}\n" \
+  https://aqie-maps-frontend.dev.cdp-int.defra.cloud/api/monitoring-stations
+
+curl -sS -o /dev/null -w "forecast-api (forecasts): %{http_code}\n" \
+  https://aqie-maps-frontend.dev.cdp-int.defra.cloud/api/forecasts
+```
+
+Both should return `200`. A `500` means the upstream is reachable but returned an error; a connection error or `502` from inside a CDP terminal means the app process is not running — check logs for the startup error.
+
+
 ## SonarCloud
 
 Instructions for setting up SonarCloud can be found in [sonar-project.properties](./sonar-project.properties).
