@@ -442,7 +442,7 @@ describe('#monitoring stations', () => {
 
   test('Should skip stations with NaN coordinates', async () => {
     const stations = [
-      { localSiteID: 'NANST', location: { coordinates: [NaN, -0.1] } },
+      { localSiteID: 'NANST', location: { coordinates: [Number.NaN, -0.1] } },
       { localSiteID: 'UKA002', location: { coordinates: [52, -1] } }
     ]
     vi.stubGlobal(
@@ -758,13 +758,66 @@ describe('#station panel', () => {
     }
     const nanStation = {
       localSiteID: 'NANST',
-      location: { coordinates: [NaN, NaN] }
+      location: { coordinates: [Number.NaN, Number.NaN] }
     }
     await loadStationsAndIdle([nanStation, validStation])
     mapClickCallback({ coords: [-0.1, 51.5] })
     expect(
       document.getElementById('station-panel').classList.contains('visible')
     ).toBe(true)
+  })
+
+  test('Should not throw when close button is clicked with no station selected', async () => {
+    await loadStationsAndIdle([station])
+    // Close without ever selecting a station — selectedMarkerId is null
+    expect(() => document.getElementById('sp-close').click()).not.toThrow()
+    expect(
+      document.getElementById('station-panel').classList.contains('visible')
+    ).toBe(false)
+  })
+
+  test('Should render end date row for a closed station with a closeDate', async () => {
+    const closedStation = {
+      localSiteID: 'UKA001',
+      name: 'Old Station',
+      location: { coordinates: [51.5, -0.1] },
+      stationStatus: 'closed',
+      closeDate: '2020-12-31'
+    }
+    await loadStationsAndIdle([closedStation])
+    mapClickCallback({ coords: [-0.1, 51.5] })
+    const details = document.getElementById('sp-details')
+    expect(details.textContent).toContain('End date')
+    expect(details.textContent).toContain('31 December 2020')
+  })
+
+  test('Should fall back to the raw code for an unrecognised pollutant', async () => {
+    const stationWithCustom = { ...station, pollutants: ['CUSTOM_CODE'] }
+    await loadStationsAndIdle([stationWithCustom])
+    mapClickCallback({ coords: [-0.1, 51.5] })
+    expect(document.getElementById('sp-details').textContent).toContain(
+      'CUSTOM_CODE'
+    )
+  })
+
+  test('Should deduplicate pollutant labels in the panel', async () => {
+    const stationWithDupes = { ...station, pollutants: ['NO2', 'NO2'] }
+    await loadStationsAndIdle([stationWithDupes])
+    mapClickCallback({ coords: [-0.1, 51.5] })
+    const text = document.getElementById('sp-details').textContent
+    expect([...text.matchAll(/NO₂/g)]).toHaveLength(1)
+  })
+
+  test('Should render a plain DAQI tag when the forecast value is out of band range', async () => {
+    const forecast = [
+      { location: { coordinates: [51.5, -0.1] }, forecast: [{ value: 11 }] }
+    ]
+    await loadStationsAndIdleWithForecasts([station], forecast)
+    mapClickCallback({ coords: [-0.1, 51.5] })
+    const details = document.getElementById('sp-details')
+    expect(details.innerHTML).toContain('class="aq-daqi-tag"')
+    expect(details.innerHTML).not.toContain('aq-daqi-tag--')
+    expect(details.textContent).toContain('11')
   })
 })
 
@@ -1010,7 +1063,7 @@ describe('#filter panel', () => {
   test('Should show station with no pollutant data regardless of selected filter', async () => {
     const noPollutantsStation = {
       localSiteID: 'UKA002',
-      location: { coordinates: [52.0, -1.0] },
+      location: { coordinates: [52, -1] },
       pollutants: []
     }
     await loadAndIdleWithFilter({ stations: [noPollutantsStation] })
@@ -1056,5 +1109,50 @@ describe('#filter panel', () => {
     showInactiveCheckbox.checked = false
     showInactiveCheckbox.dispatchEvent(new Event('change', { bubbles: true }))
     expect(mockMapInstance.removeMarker).toHaveBeenCalledWith('ms-UKA001')
+  })
+
+  test('Should ignore a non-checkbox change event on the scroll container', async () => {
+    await loadAndIdleWithFilter()
+    mockMapInstance.addMarker.mockClear()
+    const scroll = document.querySelector('.aq-filter-panel__scroll')
+    const div = document.createElement('div')
+    scroll.appendChild(div)
+    div.dispatchEvent(new Event('change', { bubbles: true }))
+    expect(mockMapInstance.addMarker).not.toHaveBeenCalled()
+  })
+
+  test('Should render show-inactive checkbox as unchecked after being toggled off', async () => {
+    await loadAndIdleWithFilter()
+    // Toggle show-inactive off
+    const showInactiveCheckbox = document.getElementById('filter-show-inactive')
+    showInactiveCheckbox.checked = false
+    showInactiveCheckbox.dispatchEvent(new Event('change', { bubbles: true }))
+    // Switch tabs to force re-render of filter sections
+    document.getElementById('filter-tab-other').click()
+    document.getElementById('filter-tab-daqi').click()
+    const reRendered = document.getElementById('filter-show-inactive')
+    expect(reRendered.hasAttribute('checked')).toBe(false)
+  })
+
+  test('Should keep an active station visible when show inactive is unchecked', async () => {
+    const activeStation = {
+      localSiteID: 'UKA001',
+      location: { coordinates: [51.5, -0.1] },
+      stationStatus: 'current',
+      pollutants: ['NO2']
+    }
+    await loadAndIdleWithFilter({ stations: [activeStation] })
+    const showInactiveCheckbox = document.getElementById('filter-show-inactive')
+    showInactiveCheckbox.checked = false
+    showInactiveCheckbox.dispatchEvent(new Event('change', { bubbles: true }))
+    mockMapInstance.addMarker.mockClear()
+    // Re-plot by switching tabs
+    document.getElementById('filter-tab-other').click()
+    document.getElementById('filter-tab-daqi').click()
+    expect(mockMapInstance.addMarker).toHaveBeenCalledWith(
+      'ms-UKA001',
+      [-0.1, 51.5],
+      expect.any(Object)
+    )
   })
 })
