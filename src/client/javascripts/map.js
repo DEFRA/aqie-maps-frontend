@@ -1,4 +1,4 @@
-/* global defra */
+/* global defra, history */
 
 const defaultZoom = 5.4842222
 const ukCentreLng = -1.4649
@@ -9,6 +9,21 @@ const FORECAST_MATCH_RADIUS_DEG = 0.05
 
 // Maximum squared distance (degrees²) for a map click to select a station (~11 km at mid zoom).
 const CLICK_SELECT_MAX_SQUARED_DEG = 0.01
+
+const DAQI_POLLUTANTS = [
+  { label: 'Fine particulate matter (PM2.5)', codes: ['PM25'] },
+  { label: 'Particulate matter (PM10)', codes: ['PM10'] },
+  { label: 'Nitrogen dioxide (NO2)', codes: ['NO2'] },
+  { label: 'Ozone (O3)', codes: ['O3'] },
+  { label: 'Sulphur dioxide (SO2)', codes: ['SO2'] }
+]
+
+const filterState = {
+  mode: 'daqi',
+  selected: new Set(['NO2', 'O3', 'SO2', 'PM25', 'PM10'])
+}
+
+let showInactiveStations = true
 
 const map = new defra.InteractiveMap('map', {
   mapProvider: defra.maplibreProvider(),
@@ -233,93 +248,19 @@ function hideKeyOverlay(byUser) {
 }
 
 /**
- * Renders the DAQI 1–10 colour scale into #map-key-body.
- */
-function renderKeyOverlay() {
-  const body = document.getElementById('map-key-body')
-  if (!body) {
-    return
-  }
-  body.innerHTML =
-    '<div class="aq-daqi-scale">' +
-    '<div class="aq-daqi-scale__bands">' +
-    '<div class="aq-daqi-scale__band aq-daqi-scale__band--green">1</div>' +
-    '<div class="aq-daqi-scale__band aq-daqi-scale__band--green">2</div>' +
-    '<div class="aq-daqi-scale__band aq-daqi-scale__band--green">3</div>' +
-    '<div class="aq-daqi-scale__band aq-daqi-scale__band--yellow">4</div>' +
-    '<div class="aq-daqi-scale__band aq-daqi-scale__band--yellow">5</div>' +
-    '<div class="aq-daqi-scale__band aq-daqi-scale__band--yellow">6</div>' +
-    '<div class="aq-daqi-scale__band aq-daqi-scale__band--red">7</div>' +
-    '<div class="aq-daqi-scale__band aq-daqi-scale__band--red">8</div>' +
-    '<div class="aq-daqi-scale__band aq-daqi-scale__band--red">9</div>' +
-    '<div class="aq-daqi-scale__band aq-daqi-scale__band--black">10</div>' +
-    '</div>' +
-    '<div class="aq-daqi-scale__labels">' +
-    '<div class="aq-daqi-scale__label-group aq-daqi-scale__label-group--low">' +
-    '<span class="aq-daqi-scale__level">Low</span>' +
-    '<span class="aq-daqi-scale__range">1 to 3</span>' +
-    '</div>' +
-    '<div class="aq-daqi-scale__label-group aq-daqi-scale__label-group--moderate">' +
-    '<span class="aq-daqi-scale__level">Moderate</span>' +
-    '<span class="aq-daqi-scale__range">4 to 6</span>' +
-    '</div>' +
-    '<div class="aq-daqi-scale__label-group aq-daqi-scale__label-group--high">' +
-    '<span class="aq-daqi-scale__level">High</span>' +
-    '<span class="aq-daqi-scale__range">7 to 9</span>' +
-    '</div>' +
-    '<div class="aq-daqi-scale__label-group aq-daqi-scale__label-group--veryhigh">' +
-    '<span class="aq-daqi-scale__level">Very high</span>' +
-    '<span class="aq-daqi-scale__range">10</span>' +
-    '</div>' +
-    '</div>' +
-    '</div>'
-}
-
-/**
- * Initialises the map key overlay with a close button and DAQI scale.
+ * Wires up the map key close button.
  */
 function initKeyOverlay() {
-  const overlay = document.getElementById(MAP_KEY_OVERLAY_ID)
-  if (!overlay) {
-    return
-  }
-  overlay.innerHTML =
-    '<button id="map-key-close" class="aq-map-key__close" aria-label="Close map key">' +
-    '<svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 20 20">' +
-    '<path d="M10,8.6L15.6,3L17,4.4L11.4,10L17,15.6L15.6,17L10,11.4L4.4,17L3,15.6L8.6,10L3,4.4L4.4,3L10,8.6Z"/>' +
-    '</svg>' +
-    '<span class="govuk-visually-hidden">Close map key</span>' +
-    '</button>' +
-    '<div class="aq-map-key__body">' +
-    '<h2 class="govuk-heading-s govuk-!-margin-bottom-1">Map key</h2>' +
-    '<p class="govuk-body-s govuk-!-margin-bottom-2">Daily Air Quality Index (DAQI)</p>' +
-    '<div id="map-key-body"></div>' +
-    '</div>'
-  renderKeyOverlay()
-  document.getElementById('map-key-close').addEventListener('click', () => {
+  document.getElementById('map-key-close')?.addEventListener('click', () => {
     hideKeyOverlay(true)
   })
 }
 
 /**
- * Initialises the reopen stack with a Key toggle button.
+ * Wires up the Key toggle button in the reopen stack.
  */
 function initReopenStack() {
-  const stack = document.querySelector('.reopen-stack')
-  if (!stack) {
-    return
-  }
-  stack.innerHTML =
-    '<button class="aq-map__menu reopen-btn" id="key-button" aria-label="Toggle map key">' +
-    '<svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 20 20" fill-rule="evenodd" fill="currentColor">' +
-    '<circle cx="3.5" cy="4" r="1.5"></circle>' +
-    '<circle cx="3.5" cy="10" r="1.5"></circle>' +
-    '<circle cx="3.5" cy="16" r="1.5"></circle>' +
-    '<path d="M7 4h11M7 10h11M7 16h11" fill="none" stroke="currentColor" stroke-width="2"></path>' +
-    '</svg>' +
-    '<span class="reopen-text">Key</span>' +
-    '</button>'
-  document.getElementById('key-button').addEventListener('click', () => {
+  document.getElementById('key-button')?.addEventListener('click', () => {
     const overlay = document.getElementById(MAP_KEY_OVERLAY_ID)
     if (overlay?.hidden) {
       keyClosedByUser = false
@@ -330,21 +271,202 @@ function initReopenStack() {
   })
 }
 
-// Plot all station markers and initialise map UI on first render.
-map.on('map:firstidle', () => {
+/**
+ * Returns true if the station should be shown given the current filter state.
+ * Stations with no pollutant data are always shown (data may not have loaded yet).
+ * @param {object} station
+ * @returns {boolean}
+ */
+function stationMatchesFilter(station) {
+  if (!showInactiveStations) {
+    const st = (
+      station.stationStatus ||
+      station.status ||
+      station.siteStatus ||
+      ''
+    ).toLowerCase()
+    if (st && st !== 'current' && st !== 'active') {
+      return false
+    }
+  }
+  if (filterState.mode === 'other') {
+    return true
+  }
+  if (filterState.selected.size === 0) {
+    return false
+  }
+  const pollutants = station.pollutants || []
+  if (pollutants.length === 0) {
+    return true
+  }
+  return pollutants.some((code) => filterState.selected.has(code))
+}
+
+/**
+ * (Re)plots all markers that pass the current filter, removing any that no longer match.
+ */
+function plotAllMarkers() {
   stations.forEach((station) => {
     if (!hasValidCoords(station)) {
       return
     }
-    map.addMarker(
-      stationMarkerId(station),
-      stationMapCoords(station),
-      daqiMarkerOptions(stationDaqi(station), false)
-    )
+    const id = stationMarkerId(station)
+    if (id === selectedMarkerId) {
+      return
+    }
+    if (stationMatchesFilter(station)) {
+      map.addMarker(
+        id,
+        stationMapCoords(station),
+        daqiMarkerOptions(stationDaqi(station), false)
+      )
+    } else {
+      map.removeMarker(id)
+    }
   })
+}
+
+// Plot all station markers and initialise map UI on first render.
+map.on('map:firstidle', () => {
+  plotAllMarkers()
   initKeyOverlay()
   initReopenStack()
+  initFilterPanel()
+  document.getElementById('exit-map')?.addEventListener('click', () => {
+    history.back()
+  })
 })
+
+/**
+ * Renders the DAQI pollutant checkboxes into the filter panel.
+ */
+function renderFilterDaqi() {
+  const mount = document.getElementById('filter-mount')
+  if (!mount) {
+    return
+  }
+  const items = DAQI_POLLUTANTS.map((pollutant, i) => {
+    const id = `filter-pollutant-${i}`
+    const checked = pollutant.codes.every((code) =>
+      filterState.selected.has(code)
+    )
+    return (
+      `<div class="govuk-checkboxes__item">` +
+      `<input class="govuk-checkboxes__input" id="${id}" type="checkbox" value="${pollutant.codes.join(',')}"${checked ? ' checked' : ''}>` +
+      `<label class="govuk-label govuk-checkboxes__label" for="${id}">${pollutant.label}</label>` +
+      `</div>`
+    )
+  }).join('')
+  mount.innerHTML =
+    '<fieldset class="govuk-fieldset">' +
+    '<legend class="govuk-visually-hidden">Select pollutants to display on the map</legend>' +
+    '<div class="govuk-checkboxes govuk-checkboxes--small">' +
+    items +
+    '</div>' +
+    '</fieldset>'
+  renderFilterSections()
+  const scroll = document.querySelector('.aq-filter-panel__scroll')
+  if (scroll && !scroll.dataset.filterBound) {
+    scroll.addEventListener('change', (event) => {
+      if (event.target?.type !== 'checkbox') {
+        return
+      }
+      if (event.target.id === 'filter-show-inactive') {
+        showInactiveStations = event.target.checked
+      } else {
+        const codes = event.target.value.split(',')
+        if (event.target.checked) {
+          codes.forEach((code) => filterState.selected.add(code))
+        } else {
+          codes.forEach((code) => filterState.selected.delete(code))
+        }
+      }
+      plotAllMarkers()
+    })
+    scroll.dataset.filterBound = 'true'
+  }
+}
+
+/**
+ * Renders the Data sources and Map features collapsible sections.
+ */
+function renderFilterSections() {
+  const sections = document.getElementById('filter-sections')
+  if (!sections) {
+    return
+  }
+  sections.innerHTML =
+    '<details class="govuk-details govuk-!-margin-top-3 govuk-!-margin-bottom-0">' +
+    '<summary class="govuk-details__summary"><span class="govuk-details__summary-text">Data sources</span></summary>' +
+    '<div class="govuk-details__text">' +
+    '<p class="govuk-body-s govuk-!-margin-bottom-0">Automatic Urban and Rural Network (AURN)</p>' +
+    '</div>' +
+    '</details>' +
+    '<details class="govuk-details govuk-!-margin-top-2 govuk-!-margin-bottom-0">' +
+    '<summary class="govuk-details__summary"><span class="govuk-details__summary-text">Map features</span></summary>' +
+    '<div class="govuk-details__text">' +
+    '<div class="govuk-checkboxes govuk-checkboxes--small">' +
+    '<div class="govuk-checkboxes__item">' +
+    `<input class="govuk-checkboxes__input" id="filter-show-inactive" type="checkbox"${showInactiveStations ? ' checked' : ''}>` +
+    '<label class="govuk-label govuk-checkboxes__label" for="filter-show-inactive">Show closed and inactive stations</label>' +
+    '</div>' +
+    '</div>' +
+    '</div>' +
+    '</details>'
+}
+
+/**
+ * Renders the "other pollutants" placeholder content.
+ */
+function renderFilterOther() {
+  const mount = document.getElementById('filter-mount')
+  if (!mount) {
+    return
+  }
+  mount.innerHTML =
+    '<p class="govuk-body-s govuk-!-margin-top-2">Other pollutant networks are not yet available.</p>'
+  renderFilterSections()
+}
+
+/**
+ * Wires up the filter panel tabs, checkboxes and open/close behaviour.
+ */
+function initFilterPanel() {
+  const panel = document.getElementById('filter-panel')
+  if (!panel) {
+    return
+  }
+  renderFilterDaqi()
+  const reopenBtn = document.getElementById('filter-button')
+  const tabDaqi = document.getElementById('filter-tab-daqi')
+  const tabOther = document.getElementById('filter-tab-other')
+  document
+    .getElementById('filter-panel-close')
+    .addEventListener('click', () => {
+      panel.hidden = true
+      reopenBtn.hidden = false
+      reopenBtn.focus()
+    })
+  reopenBtn?.addEventListener('click', () => {
+    panel.hidden = false
+    reopenBtn.hidden = true
+    panel.focus()
+  })
+  tabDaqi.addEventListener('click', () => {
+    filterState.mode = 'daqi'
+    tabDaqi.setAttribute('aria-pressed', 'true')
+    tabOther.setAttribute('aria-pressed', 'false')
+    renderFilterDaqi()
+    plotAllMarkers()
+  })
+  tabOther.addEventListener('click', () => {
+    filterState.mode = 'other'
+    tabOther.setAttribute('aria-pressed', 'true')
+    tabDaqi.setAttribute('aria-pressed', 'false')
+    renderFilterOther()
+    plotAllMarkers()
+  })
+}
 
 /**
  * Prevents XSS when setting innerHTML with user-sourced station data.
