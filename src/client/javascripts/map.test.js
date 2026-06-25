@@ -439,6 +439,29 @@ describe('#monitoring stations', () => {
     mapReadyCallback()
     expect(mockMapInstance.addMarker).not.toHaveBeenCalled()
   })
+
+  test('Should skip stations with NaN coordinates', async () => {
+    const stations = [
+      { localSiteID: 'NANST', location: { coordinates: [NaN, -0.1] } },
+      { localSiteID: 'UKA002', location: { coordinates: [52, -1] } }
+    ]
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ stations })
+      })
+    )
+    vi.resetModules()
+    await import('./map.js')
+    mapReadyCallback()
+    expect(mockMapInstance.addMarker).toHaveBeenCalledTimes(1)
+    expect(mockMapInstance.addMarker).toHaveBeenCalledWith(
+      'ms-UKA002',
+      [-1, 52],
+      expect.any(Object)
+    )
+  })
 })
 
 async function loadWithForecasts(stations, forecasts) {
@@ -546,6 +569,17 @@ describe('#DAQI markers', () => {
     // Closed → DAQI null → grey, no DAQI label
     expect(call[2].symbolSvgContent).toContain('fill="#777777"')
     expect(call[2].symbolSvgContent).not.toContain('#ffdd00')
+  })
+
+  test('Should skip forecast entry with no coordinates and still match the next', async () => {
+    const forecastWithMissingCoords = [
+      { location: {} },
+      { location: { coordinates: [51.5, -0.1] }, forecast: [{ value: 4 }] }
+    ]
+    await loadWithForecasts([station], forecastWithMissingCoords)
+    const call = mockMapInstance.addMarker.mock.calls[0]
+    expect(call[2].symbolSvgContent).toContain('#ffdd00')
+    expect(call[2].symbolSvgContent).toContain('>4<')
   })
 })
 
@@ -705,6 +739,32 @@ describe('#station panel', () => {
     document.getElementById('sp-close').click()
     // Key should remain hidden
     expect(document.getElementById('map-key-overlay').hidden).toBe(true)
+  })
+
+  test('Should render an unparseable openDate as-is in the panel', async () => {
+    const stationWithBadDate = { ...station, openDate: 'not-a-date' }
+    await loadStationsAndIdle([stationWithBadDate])
+    mapClickCallback({ coords: [-0.1, 51.5] })
+    expect(document.getElementById('sp-details').textContent).toContain(
+      'not-a-date'
+    )
+  })
+
+  test('Should skip stations with NaN coordinates during map:click', async () => {
+    const validStation = {
+      localSiteID: 'UKA001',
+      name: 'London Test',
+      location: { coordinates: [51.5, -0.1] }
+    }
+    const nanStation = {
+      localSiteID: 'NANST',
+      location: { coordinates: [NaN, NaN] }
+    }
+    await loadStationsAndIdle([nanStation, validStation])
+    mapClickCallback({ coords: [-0.1, 51.5] })
+    expect(
+      document.getElementById('station-panel').classList.contains('visible')
+    ).toBe(true)
   })
 })
 
@@ -945,5 +1005,54 @@ describe('#filter panel', () => {
       [-0.1, 51.5],
       expect.any(Object)
     )
+  })
+
+  test('Should show station with no pollutant data regardless of selected filter', async () => {
+    const noPollutantsStation = {
+      localSiteID: 'UKA002',
+      location: { coordinates: [52.0, -1.0] },
+      pollutants: []
+    }
+    await loadAndIdleWithFilter({ stations: [noPollutantsStation] })
+    expect(mockMapInstance.addMarker).toHaveBeenCalledWith(
+      'ms-UKA002',
+      [-1, 52],
+      expect.any(Object)
+    )
+  })
+
+  test('Should remove marker when all DAQI pollutants are deselected', async () => {
+    const stations = [
+      {
+        localSiteID: 'UKA001',
+        location: { coordinates: [51.5, -0.1] },
+        pollutants: ['NO2', 'PM10', 'O3', 'SO2', 'PM25']
+      }
+    ]
+    await loadAndIdleWithFilter({ stations })
+    mockMapInstance.removeMarker.mockClear()
+    const pollutantCheckboxes = Array.from(
+      document.querySelectorAll('.aq-filter-panel__scroll input[type="checkbox"]')
+    ).filter((el) => el.id !== 'filter-show-inactive')
+    pollutantCheckboxes.forEach((checkbox) => {
+      checkbox.checked = false
+      checkbox.dispatchEvent(new Event('change', { bubbles: true }))
+    })
+    expect(mockMapInstance.removeMarker).toHaveBeenCalledWith('ms-UKA001')
+  })
+
+  test('Should hide closed station when show inactive is unchecked', async () => {
+    const closedStation = {
+      localSiteID: 'UKA001',
+      location: { coordinates: [51.5, -0.1] },
+      stationStatus: 'closed',
+      pollutants: ['NO2']
+    }
+    await loadAndIdleWithFilter({ stations: [closedStation] })
+    mockMapInstance.removeMarker.mockClear()
+    const showInactiveCheckbox = document.getElementById('filter-show-inactive')
+    showInactiveCheckbox.checked = false
+    showInactiveCheckbox.dispatchEvent(new Event('change', { bubbles: true }))
+    expect(mockMapInstance.removeMarker).toHaveBeenCalledWith('ms-UKA001')
   })
 })
