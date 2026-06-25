@@ -1032,7 +1032,9 @@ describe('#filter panel', () => {
     await loadAndIdleWithFilter({ stations })
     mockMapInstance.removeMarker.mockClear()
     const pollutantCheckboxes = Array.from(
-      document.querySelectorAll('.aq-filter-panel__scroll input[type="checkbox"]')
+      document.querySelectorAll(
+        '.aq-filter-panel__scroll input[type="checkbox"]'
+      )
     ).filter((el) => el.id !== 'filter-show-inactive')
     pollutantCheckboxes.forEach((checkbox) => {
       checkbox.checked = false
