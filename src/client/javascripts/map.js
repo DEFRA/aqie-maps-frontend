@@ -1,5 +1,15 @@
 /* global defra, history */
 
+import { daqiBand, daqiMarkerOptions } from './map-daqi.js'
+import {
+  escapeHtml,
+  formatDate,
+  NOT_AVAILABLE,
+  pollutantLabels,
+  stationStatusTag
+} from './map-utils.js'
+import { stationMatchesFilter, initFilterPanel } from './map-filter-panel.js'
+
 const defaultZoom = 5.4842222
 const ukCentreLng = -1.4649
 const ukCentreLat = 52.5619
@@ -9,21 +19,6 @@ const FORECAST_MATCH_RADIUS_DEG = 0.05
 
 // Maximum squared distance (degrees²) for a map click to select a station (~11 km at mid zoom).
 const CLICK_SELECT_MAX_SQUARED_DEG = 0.01
-
-const DAQI_POLLUTANTS = [
-  { label: 'Fine particulate matter (PM2.5)', codes: ['PM25'] },
-  { label: 'Particulate matter (PM10)', codes: ['PM10'] },
-  { label: 'Nitrogen dioxide (NO2)', codes: ['NO2'] },
-  { label: 'Ozone (O3)', codes: ['O3'] },
-  { label: 'Sulphur dioxide (SO2)', codes: ['SO2'] }
-]
-
-const filterState = {
-  mode: 'daqi',
-  selected: new Set(['NO2', 'O3', 'SO2', 'PM25', 'PM10'])
-}
-
-let showInactiveStations = true
 
 const map = new defra.InteractiveMap('map', {
   mapProvider: defra.maplibreProvider(),
@@ -73,70 +68,6 @@ function hasValidCoords(station) {
     return false
   }
   return true
-}
-
-// DAQI background colours indexed by DAQI value (1–10); index 0 is unused.
-// Yellow (#ffdd00) values 4–6 need dark text.
-const daqiBg = [
-  null,
-  '#00703c',
-  '#00703c',
-  '#00703c',
-  '#ffdd00',
-  '#ffdd00',
-  '#ffdd00',
-  '#d4351c',
-  '#d4351c',
-  '#d4351c',
-  '#0b0c0c'
-]
-
-const daqiBand = [
-  null,
-  'Low',
-  'Low',
-  'Low',
-  'Moderate',
-  'Moderate',
-  'Moderate',
-  'High',
-  'High',
-  'High',
-  'Very High'
-]
-
-/**
- * Builds SVG marker options coloured by DAQI value.
- * Falls back to grey when no DAQI value is available.
- * @param {number|null} daqiValue - DAQI index 1–10, or null
- * @param {boolean} selected
- * @returns {{ symbolSvgContent: string, viewBox: string, anchor: [number, number] }}
- */
-function daqiMarkerOptions(daqiValue, selected) {
-  let bg
-  if (daqiValue && daqiBg[daqiValue]) {
-    bg = daqiBg[daqiValue]
-  } else if (selected) {
-    bg = '#555555'
-  } else {
-    bg = '#777777'
-  }
-  const strokeAttr = selected
-    ? 'stroke="#0b0c0c" stroke-width="2"'
-    : 'stroke="white" stroke-width="2"'
-  const textFill = bg === '#ffdd00' ? '#0b0c0c' : '#ffffff'
-  const label = daqiValue
-    ? `<text x="19" y="24" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" font-weight="bold" fill="${textFill}">${daqiValue}</text>`
-    : ''
-  const shadow =
-    '<defs><filter id="ds" x="-50%" y="-50%" width="200%" height="200%">' +
-    '<feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000000" flood-opacity="0.3"/>' +
-    '</filter></defs>'
-  return {
-    symbolSvgContent: `${shadow}<circle cx="19" cy="19" r="14" fill="${bg}" ${strokeAttr} filter="url(#ds)"/>${label}`,
-    viewBox: '0 0 38 38',
-    anchor: [0.5, 0.5]
-  }
 }
 
 let stations = []
@@ -272,37 +203,6 @@ function initReopenStack() {
 }
 
 /**
- * Returns true if the station should be shown given the current filter state.
- * Stations with no pollutant data are always shown (data may not have loaded yet).
- * @param {object} station
- * @returns {boolean}
- */
-function stationMatchesFilter(station) {
-  if (!showInactiveStations) {
-    const st = (
-      station.stationStatus ||
-      station.status ||
-      station.siteStatus ||
-      ''
-    ).toLowerCase()
-    if (st && st !== 'current' && st !== 'active') {
-      return false
-    }
-  }
-  if (filterState.mode === 'other') {
-    return true
-  }
-  if (filterState.selected.size === 0) {
-    return false
-  }
-  const pollutants = station.pollutants || []
-  if (pollutants.length === 0) {
-    return true
-  }
-  return pollutants.some((code) => filterState.selected.has(code))
-}
-
-/**
  * (Re)plots all markers that pass the current filter, removing any that no longer match.
  */
 function plotAllMarkers() {
@@ -331,206 +231,11 @@ map.on('map:firstidle', () => {
   plotAllMarkers()
   initKeyOverlay()
   initReopenStack()
-  initFilterPanel()
+  initFilterPanel(plotAllMarkers)
   document.getElementById('exit-map')?.addEventListener('click', () => {
     history.back()
   })
 })
-
-/**
- * Renders the DAQI pollutant checkboxes into the filter panel.
- */
-function renderFilterDaqi() {
-  const mount = document.getElementById('filter-mount')
-  if (!mount) {
-    return
-  }
-  const items = DAQI_POLLUTANTS.map((pollutant, i) => {
-    const id = `filter-pollutant-${i}`
-    const checked = pollutant.codes.every((code) =>
-      filterState.selected.has(code)
-    )
-    return (
-      `<div class="govuk-checkboxes__item">` +
-      `<input class="govuk-checkboxes__input" id="${id}" type="checkbox" value="${pollutant.codes.join(',')}"${checked ? ' checked' : ''}>` +
-      `<label class="govuk-label govuk-checkboxes__label" for="${id}">${pollutant.label}</label>` +
-      `</div>`
-    )
-  }).join('')
-  mount.innerHTML =
-    '<fieldset class="govuk-fieldset">' +
-    '<legend class="govuk-visually-hidden">Select pollutants to display on the map</legend>' +
-    '<div class="govuk-checkboxes govuk-checkboxes--small">' +
-    items +
-    '</div>' +
-    '</fieldset>'
-  renderFilterSections()
-  const scroll = document.querySelector('.aq-filter-panel__scroll')
-  if (scroll && !scroll.dataset.filterBound) {
-    scroll.addEventListener('change', (event) => {
-      if (event.target?.type !== 'checkbox') {
-        return
-      }
-      if (event.target.id === 'filter-show-inactive') {
-        showInactiveStations = event.target.checked
-      } else {
-        const codes = event.target.value.split(',')
-        if (event.target.checked) {
-          codes.forEach((code) => filterState.selected.add(code))
-        } else {
-          codes.forEach((code) => filterState.selected.delete(code))
-        }
-      }
-      plotAllMarkers()
-    })
-    scroll.dataset.filterBound = 'true'
-  }
-}
-
-/**
- * Renders the Data sources and Map features collapsible sections.
- */
-function renderFilterSections() {
-  const sections = document.getElementById('filter-sections')
-  if (!sections) {
-    return
-  }
-  sections.innerHTML =
-    '<details class="govuk-details govuk-!-margin-top-3 govuk-!-margin-bottom-0">' +
-    '<summary class="govuk-details__summary"><span class="govuk-details__summary-text">Data sources</span></summary>' +
-    '<div class="govuk-details__text">' +
-    '<p class="govuk-body-s govuk-!-margin-bottom-0">Automatic Urban and Rural Network (AURN)</p>' +
-    '</div>' +
-    '</details>' +
-    '<details class="govuk-details govuk-!-margin-top-2 govuk-!-margin-bottom-0">' +
-    '<summary class="govuk-details__summary"><span class="govuk-details__summary-text">Map features</span></summary>' +
-    '<div class="govuk-details__text">' +
-    '<div class="govuk-checkboxes govuk-checkboxes--small">' +
-    '<div class="govuk-checkboxes__item">' +
-    `<input class="govuk-checkboxes__input" id="filter-show-inactive" type="checkbox"${showInactiveStations ? ' checked' : ''}>` +
-    '<label class="govuk-label govuk-checkboxes__label" for="filter-show-inactive">Show closed and inactive stations</label>' +
-    '</div>' +
-    '</div>' +
-    '</div>' +
-    '</details>'
-}
-
-/**
- * Renders the "other pollutants" placeholder content.
- */
-function renderFilterOther() {
-  const mount = document.getElementById('filter-mount')
-  if (!mount) {
-    return
-  }
-  mount.innerHTML =
-    '<p class="govuk-body-s govuk-!-margin-top-2">Other pollutant networks are not yet available.</p>'
-  renderFilterSections()
-}
-
-/**
- * Wires up the filter panel tabs, checkboxes and open/close behaviour.
- */
-function initFilterPanel() {
-  const panel = document.getElementById('filter-panel')
-  if (!panel) {
-    return
-  }
-  renderFilterDaqi()
-  const reopenBtn = document.getElementById('filter-button')
-  const tabDaqi = document.getElementById('filter-tab-daqi')
-  const tabOther = document.getElementById('filter-tab-other')
-  document
-    .getElementById('filter-panel-close')
-    .addEventListener('click', () => {
-      panel.hidden = true
-      reopenBtn.hidden = false
-      reopenBtn.focus()
-    })
-  reopenBtn?.addEventListener('click', () => {
-    panel.hidden = false
-    reopenBtn.hidden = true
-    panel.focus()
-  })
-  tabDaqi.addEventListener('click', () => {
-    filterState.mode = 'daqi'
-    tabDaqi.setAttribute('aria-pressed', 'true')
-    tabOther.setAttribute('aria-pressed', 'false')
-    renderFilterDaqi()
-    plotAllMarkers()
-  })
-  tabOther.addEventListener('click', () => {
-    filterState.mode = 'other'
-    tabOther.setAttribute('aria-pressed', 'true')
-    tabDaqi.setAttribute('aria-pressed', 'false')
-    renderFilterOther()
-    plotAllMarkers()
-  })
-}
-
-/**
- * Prevents XSS when setting innerHTML with user-sourced station data.
- * @param {string} str
- * @returns {string}
- */
-function escapeHtml(str) {
-  return String(str)
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-}
-
-/**
- * Formats an ISO date string to a human-readable en-GB date.
- * @param {string} dateStr
- * @returns {string}
- */
-function formatDate(dateStr) {
-  if (!dateStr) {
-    return ''
-  }
-  const date = new Date(dateStr)
-  if (Number.isNaN(date.getTime())) {
-    return dateStr
-  }
-  return date.toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric'
-  })
-}
-
-const NOT_AVAILABLE = 'Not available'
-
-const pollutantLabels = {
-  NO2: 'NO₂',
-  O3: 'O₃',
-  SO2: 'SO₂',
-  PM25: 'PM2.5',
-  PM10: 'PM10'
-}
-
-/**
- * Returns an HTML status tag string for the station name heading, or '' if no tag is needed.
- * @param {string} status - lowercased station status
- * @param {boolean} isClosed
- * @returns {string}
- */
-function stationStatusTag(status, isClosed) {
-  const tagLabel =
-    status === 'current'
-      ? 'Active'
-      : status.charAt(0).toUpperCase() + status.slice(1)
-
-  if (status === 'current') {
-    return ` <strong class="aq-station-tag aq-station-tag--active">${escapeHtml(tagLabel)}</strong>`
-  }
-  if (isClosed) {
-    return ` <strong class="aq-station-tag aq-station-tag--closed">${escapeHtml(tagLabel)}</strong>`
-  }
-  return ''
-}
 
 /**
  * Builds the DAQI detail row for the station panel, or null if unavailable.
