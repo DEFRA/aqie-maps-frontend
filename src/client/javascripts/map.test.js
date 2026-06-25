@@ -40,8 +40,74 @@ function stubFetch({ stations = [], forecasts = [] } = {}) {
 function resetDom() {
   document.body.innerHTML = `
     <div id="map"></div>
-    <div id="map-key-overlay" class="aq-map-key" role="region" aria-label="Map key"></div>
-    <div class="reopen-stack" aria-label="Map actions"></div>
+    <div id="map-key-overlay" class="aq-map-key" role="region" aria-label="Map key">
+      <button id="map-key-close" class="aq-map-key__close" aria-label="Close map key">
+        <span class="govuk-visually-hidden">Close map key</span>
+      </button>
+      <div class="aq-map-key__body">
+        <h2 class="govuk-heading-s govuk-!-margin-bottom-1">Map key</h2>
+        <p class="govuk-body-s govuk-!-margin-bottom-2">Daily Air Quality Index (DAQI)</p>
+        <div id="map-key-body">
+          <div class="aq-daqi-scale">
+            <div class="aq-daqi-scale__bands">
+              <div class="aq-daqi-scale__band aq-daqi-scale__band--green">1</div>
+              <div class="aq-daqi-scale__band aq-daqi-scale__band--green">2</div>
+              <div class="aq-daqi-scale__band aq-daqi-scale__band--green">3</div>
+              <div class="aq-daqi-scale__band aq-daqi-scale__band--yellow">4</div>
+              <div class="aq-daqi-scale__band aq-daqi-scale__band--yellow">5</div>
+              <div class="aq-daqi-scale__band aq-daqi-scale__band--yellow">6</div>
+              <div class="aq-daqi-scale__band aq-daqi-scale__band--red">7</div>
+              <div class="aq-daqi-scale__band aq-daqi-scale__band--red">8</div>
+              <div class="aq-daqi-scale__band aq-daqi-scale__band--red">9</div>
+              <div class="aq-daqi-scale__band aq-daqi-scale__band--black">10</div>
+            </div>
+            <div class="aq-daqi-scale__labels">
+              <div class="aq-daqi-scale__label-group aq-daqi-scale__label-group--low">
+                <span class="aq-daqi-scale__level">Low</span>
+                <span class="aq-daqi-scale__range">1 to 3</span>
+              </div>
+              <div class="aq-daqi-scale__label-group aq-daqi-scale__label-group--moderate">
+                <span class="aq-daqi-scale__level">Moderate</span>
+                <span class="aq-daqi-scale__range">4 to 6</span>
+              </div>
+              <div class="aq-daqi-scale__label-group aq-daqi-scale__label-group--high">
+                <span class="aq-daqi-scale__level">High</span>
+                <span class="aq-daqi-scale__range">7 to 9</span>
+              </div>
+              <div class="aq-daqi-scale__label-group aq-daqi-scale__label-group--veryhigh">
+                <span class="aq-daqi-scale__level">Very high</span>
+                <span class="aq-daqi-scale__range">10</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="filter-panel" class="aq-filter-panel" role="region" aria-label="Search by pollutant" tabindex="-1">
+      <button id="filter-panel-close" class="aq-filter-panel__close" aria-label="Close filter panel">
+        <span class="govuk-visually-hidden">Close filter panel</span>
+      </button>
+      <div class="aq-filter-panel__body">
+        <p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-0">Search by pollutant</p>
+        <div class="aq-filter-panel__tabs" role="group" aria-label="Pollutant category">
+          <button class="aq-filter-panel__tab aq-filter-panel__tab--active" id="filter-tab-daqi" aria-pressed="true"><span>DAQI pollutants</span></button>
+          <button class="aq-filter-panel__tab" id="filter-tab-other" aria-pressed="false"><span>Other pollutants</span></button>
+        </div>
+        <div class="aq-filter-panel__scroll">
+          <div id="filter-mount" class="aq-filter-panel__mount"></div>
+          <div id="filter-sections"></div>
+        </div>
+      </div>
+    </div>
+    <div class="reopen-stack" aria-label="Map actions">
+      <button class="aq-map__menu reopen-btn" id="filter-button" aria-label="Open filter panel" hidden>
+        <span class="reopen-text">Menu</span>
+      </button>
+      <button class="aq-map__menu reopen-btn" id="key-button" aria-label="Toggle map key">
+        <span class="reopen-text">Key</span>
+      </button>
+    </div>
+    <button id="exit-map" type="button">Exit map</button>
     <div id="station-panel">
       <button id="sp-close"></button>
       <h2 id="sp-name"></h2>
@@ -57,8 +123,74 @@ beforeEach(async () => {
   // Set up DOM elements the map module interacts with
   document.body.innerHTML = `
     <div id="map"></div>
-    <div id="map-key-overlay" class="aq-map-key" role="region" aria-label="Map key"></div>
-    <div class="reopen-stack" aria-label="Map actions"></div>
+    <div id="map-key-overlay" class="aq-map-key" role="region" aria-label="Map key">
+      <button id="map-key-close" class="aq-map-key__close" aria-label="Close map key">
+        <span class="govuk-visually-hidden">Close map key</span>
+      </button>
+      <div class="aq-map-key__body">
+        <h2 class="govuk-heading-s govuk-!-margin-bottom-1">Map key</h2>
+        <p class="govuk-body-s govuk-!-margin-bottom-2">Daily Air Quality Index (DAQI)</p>
+        <div id="map-key-body">
+          <div class="aq-daqi-scale">
+            <div class="aq-daqi-scale__bands">
+              <div class="aq-daqi-scale__band aq-daqi-scale__band--green">1</div>
+              <div class="aq-daqi-scale__band aq-daqi-scale__band--green">2</div>
+              <div class="aq-daqi-scale__band aq-daqi-scale__band--green">3</div>
+              <div class="aq-daqi-scale__band aq-daqi-scale__band--yellow">4</div>
+              <div class="aq-daqi-scale__band aq-daqi-scale__band--yellow">5</div>
+              <div class="aq-daqi-scale__band aq-daqi-scale__band--yellow">6</div>
+              <div class="aq-daqi-scale__band aq-daqi-scale__band--red">7</div>
+              <div class="aq-daqi-scale__band aq-daqi-scale__band--red">8</div>
+              <div class="aq-daqi-scale__band aq-daqi-scale__band--red">9</div>
+              <div class="aq-daqi-scale__band aq-daqi-scale__band--black">10</div>
+            </div>
+            <div class="aq-daqi-scale__labels">
+              <div class="aq-daqi-scale__label-group aq-daqi-scale__label-group--low">
+                <span class="aq-daqi-scale__level">Low</span>
+                <span class="aq-daqi-scale__range">1 to 3</span>
+              </div>
+              <div class="aq-daqi-scale__label-group aq-daqi-scale__label-group--moderate">
+                <span class="aq-daqi-scale__level">Moderate</span>
+                <span class="aq-daqi-scale__range">4 to 6</span>
+              </div>
+              <div class="aq-daqi-scale__label-group aq-daqi-scale__label-group--high">
+                <span class="aq-daqi-scale__level">High</span>
+                <span class="aq-daqi-scale__range">7 to 9</span>
+              </div>
+              <div class="aq-daqi-scale__label-group aq-daqi-scale__label-group--veryhigh">
+                <span class="aq-daqi-scale__level">Very high</span>
+                <span class="aq-daqi-scale__range">10</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="filter-panel" class="aq-filter-panel" role="region" aria-label="Search by pollutant" tabindex="-1">
+      <button id="filter-panel-close" class="aq-filter-panel__close" aria-label="Close filter panel">
+        <span class="govuk-visually-hidden">Close filter panel</span>
+      </button>
+      <div class="aq-filter-panel__body">
+        <p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-0">Search by pollutant</p>
+        <div class="aq-filter-panel__tabs" role="group" aria-label="Pollutant category">
+          <button class="aq-filter-panel__tab aq-filter-panel__tab--active" id="filter-tab-daqi" aria-pressed="true"><span>DAQI pollutants</span></button>
+          <button class="aq-filter-panel__tab" id="filter-tab-other" aria-pressed="false"><span>Other pollutants</span></button>
+        </div>
+        <div class="aq-filter-panel__scroll">
+          <div id="filter-mount" class="aq-filter-panel__mount"></div>
+          <div id="filter-sections"></div>
+        </div>
+      </div>
+    </div>
+    <div class="reopen-stack" aria-label="Map actions">
+      <button class="aq-map__menu reopen-btn" id="filter-button" aria-label="Open filter panel" hidden>
+        <span class="reopen-text">Menu</span>
+      </button>
+      <button class="aq-map__menu reopen-btn" id="key-button" aria-label="Toggle map key">
+        <span class="reopen-text">Key</span>
+      </button>
+    </div>
+    <button id="exit-map" type="button">Exit map</button>
     <div id="station-panel">
       <button id="sp-close"></button>
       <h2 id="sp-name"></h2>
@@ -71,7 +203,8 @@ beforeEach(async () => {
       if (event === 'map:firstidle') mapReadyCallback = cb
       if (event === 'map:click') mapClickCallback = cb
     }),
-    addMarker: vi.fn()
+    addMarker: vi.fn(),
+    removeMarker: vi.fn()
   }
   InteractiveMap = vi.fn().mockImplementation(function () {
     return mockMapInstance
@@ -583,6 +716,14 @@ async function loadAndIdle() {
   mapReadyCallback()
 }
 
+async function loadAndIdleWithFilter(options = {}) {
+  resetDom()
+  stubFetch(options)
+  vi.resetModules()
+  await import('./map.js')
+  mapReadyCallback()
+}
+
 describe('#map key overlay', () => {
   test('Should populate key overlay content on map:firstidle', async () => {
     await loadAndIdle()
@@ -649,5 +790,160 @@ describe('#map key overlay', () => {
         call[0] === 'ms-UKA001' && call[2].symbolSvgContent.includes('#0b0c0c')
     )
     expect(selectedCall).toBeDefined()
+  })
+
+  test('Should call history.back() when exit button is clicked', async () => {
+    await loadAndIdle()
+    const backSpy = vi.spyOn(globalThis, 'history', 'get').mockReturnValue({
+      back: vi.fn()
+    })
+    document.getElementById('exit-map').click()
+    expect(backSpy.mock.results[0].value.back).toHaveBeenCalledOnce()
+    backSpy.mockRestore()
+  })
+})
+
+describe('#filter panel', () => {
+  test('Should render the filter panel on map:firstidle', async () => {
+    await loadAndIdleWithFilter()
+    const panel = document.getElementById('filter-panel')
+    expect(panel.querySelector('#filter-panel-close')).not.toBeNull()
+    expect(panel.querySelector('.aq-filter-panel__tabs')).not.toBeNull()
+    expect(panel.querySelector('#filter-mount')).not.toBeNull()
+  })
+
+  test('Should render DAQI pollutant checkboxes by default', async () => {
+    await loadAndIdleWithFilter()
+    const mount = document.getElementById('filter-mount')
+    expect(mount.textContent).toContain('Nitrogen dioxide')
+    expect(mount.textContent).toContain('Ozone')
+    expect(mount.textContent).toContain('Fine particulate matter')
+  })
+
+  test('Should render data sources and map features sections', async () => {
+    await loadAndIdleWithFilter()
+    const sections = document.getElementById('filter-sections')
+    expect(sections.textContent).toContain('Data sources')
+    expect(sections.textContent).toContain('Map features')
+    expect(sections.textContent).toContain('Show closed and inactive stations')
+  })
+
+  test('Should add a Menu button to the reopen stack', async () => {
+    await loadAndIdleWithFilter()
+    expect(document.getElementById('filter-button')).not.toBeNull()
+    expect(document.querySelector('.reopen-stack').textContent).toContain(
+      'Menu'
+    )
+  })
+
+  test('Should hide filter panel and show Menu button when close button clicked', async () => {
+    await loadAndIdleWithFilter()
+    const panel = document.getElementById('filter-panel')
+    const menuBtn = document.getElementById('filter-button')
+    document.getElementById('filter-panel-close').click()
+    expect(panel.hidden).toBe(true)
+    expect(menuBtn.hidden).toBe(false)
+  })
+
+  test('Should show filter panel and hide Menu button when Menu button clicked', async () => {
+    await loadAndIdleWithFilter()
+    const panel = document.getElementById('filter-panel')
+    const menuBtn = document.getElementById('filter-button')
+    document.getElementById('filter-panel-close').click()
+    expect(panel.hidden).toBe(true)
+    menuBtn.click()
+    expect(panel.hidden).toBe(false)
+    expect(menuBtn.hidden).toBe(true)
+  })
+
+  test('Should switch to Other pollutants tab when clicked', async () => {
+    await loadAndIdleWithFilter()
+    document.getElementById('filter-tab-other').click()
+    const mount = document.getElementById('filter-mount')
+    expect(mount.textContent).toContain('not yet available')
+    expect(
+      document.getElementById('filter-tab-other').getAttribute('aria-pressed')
+    ).toBe('true')
+    expect(
+      document.getElementById('filter-tab-daqi').getAttribute('aria-pressed')
+    ).toBe('false')
+  })
+
+  test('Should switch back to DAQI tab when clicked', async () => {
+    await loadAndIdleWithFilter()
+    document.getElementById('filter-tab-other').click()
+    document.getElementById('filter-tab-daqi').click()
+    const mount = document.getElementById('filter-mount')
+    expect(mount.textContent).toContain('Nitrogen dioxide')
+    expect(
+      document.getElementById('filter-tab-daqi').getAttribute('aria-pressed')
+    ).toBe('true')
+  })
+
+  test('Should remove marker when pollutant checkbox is unchecked', async () => {
+    const stations = [
+      {
+        localSiteID: 'UKA001',
+        location: { coordinates: [51.5, -0.1] },
+        pollutants: ['NO2']
+      }
+    ]
+    await loadAndIdleWithFilter({ stations })
+    mockMapInstance.addMarker.mockClear()
+    mockMapInstance.removeMarker.mockClear()
+    // Uncheck NO2 checkbox
+    const no2Checkbox = Array.from(
+      document.querySelectorAll(
+        '.aq-filter-panel__scroll input[type="checkbox"]'
+      )
+    ).find((el) => el.value === 'NO2')
+    no2Checkbox.checked = false
+    no2Checkbox.dispatchEvent(new Event('change', { bubbles: true }))
+    expect(mockMapInstance.removeMarker).toHaveBeenCalledWith('ms-UKA001')
+  })
+
+  test('Should add marker back when pollutant checkbox is re-checked', async () => {
+    const stations = [
+      {
+        localSiteID: 'UKA001',
+        location: { coordinates: [51.5, -0.1] },
+        pollutants: ['NO2']
+      }
+    ]
+    await loadAndIdleWithFilter({ stations })
+    // Uncheck then re-check NO2
+    const no2Checkbox = Array.from(
+      document.querySelectorAll(
+        '.aq-filter-panel__scroll input[type="checkbox"]'
+      )
+    ).find((el) => el.value === 'NO2')
+    no2Checkbox.checked = false
+    no2Checkbox.dispatchEvent(new Event('change', { bubbles: true }))
+    mockMapInstance.addMarker.mockClear()
+    no2Checkbox.checked = true
+    no2Checkbox.dispatchEvent(new Event('change', { bubbles: true }))
+    expect(mockMapInstance.addMarker).toHaveBeenCalledWith(
+      'ms-UKA001',
+      [-0.1, 51.5],
+      expect.any(Object)
+    )
+  })
+
+  test('Should show all stations when switched to Other pollutants tab', async () => {
+    const stations = [
+      {
+        localSiteID: 'UKA001',
+        location: { coordinates: [51.5, -0.1] },
+        pollutants: ['NO2']
+      }
+    ]
+    await loadAndIdleWithFilter({ stations })
+    mockMapInstance.addMarker.mockClear()
+    document.getElementById('filter-tab-other').click()
+    expect(mockMapInstance.addMarker).toHaveBeenCalledWith(
+      'ms-UKA001',
+      [-0.1, 51.5],
+      expect.any(Object)
+    )
   })
 })
