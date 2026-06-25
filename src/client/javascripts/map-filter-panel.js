@@ -88,7 +88,9 @@ function renderFilterDaqi(onFilterChange) {
   if (!mount) {
     return
   }
-  const items = DAQI_POLLUTANTS.map((pollutant, i) => renderFilterItem(pollutant, i)).join('')
+  const items = DAQI_POLLUTANTS.map((pollutant, i) =>
+    renderFilterItem(pollutant, i)
+  ).join('')
   mount.innerHTML = `<fieldset class="govuk-fieldset"><legend class="govuk-visually-hidden">Select pollutants to display on the map</legend><div class="govuk-checkboxes govuk-checkboxes--small">${items}</div></fieldset>`
   renderFilterSections()
   const scroll = document.querySelector('.aq-filter-panel__scroll')
