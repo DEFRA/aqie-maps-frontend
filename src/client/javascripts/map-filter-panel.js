@@ -77,16 +77,24 @@ function initFilterPanel(onFilterChange) {
     filterState.mode = 'daqi'
     tabDaqi.setAttribute(ARIA_PRESSED, 'true')
     tabOther.setAttribute(ARIA_PRESSED, 'false')
-    if (daqiContent) daqiContent.hidden = false
-    if (otherContent) otherContent.hidden = true
+    if (daqiContent) {
+      daqiContent.hidden = false
+    }
+    if (otherContent) {
+      otherContent.hidden = true
+    }
     onFilterChange()
   })
   tabOther.addEventListener('click', () => {
     filterState.mode = 'other'
     tabOther.setAttribute(ARIA_PRESSED, 'true')
     tabDaqi.setAttribute(ARIA_PRESSED, 'false')
-    if (daqiContent) daqiContent.hidden = true
-    if (otherContent) otherContent.hidden = false
+    if (daqiContent) {
+      daqiContent.hidden = true
+    }
+    if (otherContent) {
+      otherContent.hidden = false
+    }
     onFilterChange()
   })
   const scroll = document.querySelector('.aq-filter-panel__scroll')

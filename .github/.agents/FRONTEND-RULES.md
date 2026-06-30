@@ -109,6 +109,8 @@ Test files are **co-located** with the module they test (e.g. `controller.test.j
   {% from "govuk/components/input/macro.njk" import govukInput %}
   {% from "govuk/components/button/macro.njk" import govukButton %}
   ```
+- **Prefer Nunjucks over client-side HTML strings** — render static and initial UI server-side using Nunjucks macros rather than building HTML in JavaScript (e.g. via `innerHTML`). GDS component markup may change in future versions; server-side rendering means those updates are picked up automatically without rewriting JavaScript strings.
+- **Client-side JavaScript should show, hide, and read DOM state** — not construct HTML. If dynamic content is needed, pre-render all possible states in the Nunjucks template (using `hidden` attributes) and use JavaScript only to toggle visibility.
 
 ### SCSS/Styling Standards
 
@@ -148,6 +150,16 @@ Test files are **co-located** with the module they test (e.g. `controller.test.j
 - Parentheses required around arrow function parameters
 - Use neostandard for linting
 - JSDoc comments for functions and classes (pragmatic approach)
+- **Always use curly braces for `if` / `else` / `else if` blocks** — even for single-line bodies. Omitting braces is a common source of bugs when statements are added later.
+  ```javascript
+  // ✅ correct
+  if (condition) {
+    return value
+  }
+
+  // ❌ avoid
+  if (condition) return value
+  ```
 
 **Testing:**
 
