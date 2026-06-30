@@ -94,8 +94,57 @@ function resetDom() {
           <button class="aq-filter-panel__tab" id="filter-tab-other" aria-pressed="false"><span>Other pollutants</span></button>
         </div>
         <div class="aq-filter-panel__scroll">
-          <div id="filter-mount" class="aq-filter-panel__mount"></div>
-          <div id="filter-sections"></div>
+          <div id="filter-mount" class="aq-filter-panel__mount">
+            <div id="filter-daqi-content">
+              <div class="govuk-form-group">
+                <fieldset class="govuk-fieldset">
+                  <legend class="govuk-fieldset__legend govuk-visually-hidden">Select pollutants to display on the map</legend>
+                  <div class="govuk-checkboxes govuk-checkboxes--small">
+                    <div class="govuk-checkboxes__item">
+                      <input class="govuk-checkboxes__input" id="filter-pollutant-1" type="checkbox" name="filter-pollutant" value="PM25" checked>
+                      <label class="govuk-label govuk-checkboxes__label" for="filter-pollutant-1">Fine particulate matter (PM2.5)</label>
+                    </div>
+                    <div class="govuk-checkboxes__item">
+                      <input class="govuk-checkboxes__input" id="filter-pollutant-2" type="checkbox" name="filter-pollutant" value="PM10" checked>
+                      <label class="govuk-label govuk-checkboxes__label" for="filter-pollutant-2">Particulate matter (PM10)</label>
+                    </div>
+                    <div class="govuk-checkboxes__item">
+                      <input class="govuk-checkboxes__input" id="filter-pollutant-3" type="checkbox" name="filter-pollutant" value="NO2" checked>
+                      <label class="govuk-label govuk-checkboxes__label" for="filter-pollutant-3">Nitrogen dioxide (NO2)</label>
+                    </div>
+                    <div class="govuk-checkboxes__item">
+                      <input class="govuk-checkboxes__input" id="filter-pollutant-4" type="checkbox" name="filter-pollutant" value="O3" checked>
+                      <label class="govuk-label govuk-checkboxes__label" for="filter-pollutant-4">Ozone (O3)</label>
+                    </div>
+                    <div class="govuk-checkboxes__item">
+                      <input class="govuk-checkboxes__input" id="filter-pollutant-5" type="checkbox" name="filter-pollutant" value="SO2" checked>
+                      <label class="govuk-label govuk-checkboxes__label" for="filter-pollutant-5">Sulphur dioxide (SO2)</label>
+                    </div>
+                  </div>
+                </fieldset>
+              </div>
+            </div>
+            <div id="filter-other-content" hidden>
+              <p class="govuk-body-s govuk-!-margin-top-2">Other pollutant networks are not yet available.</p>
+            </div>
+          </div>
+          <div id="filter-sections">
+            <details class="govuk-details govuk-!-margin-top-3 govuk-!-margin-bottom-0">
+              <summary class="govuk-details__summary"><span class="govuk-details__summary-text">Data sources</span></summary>
+              <div class="govuk-details__text"><p class="govuk-body-s govuk-!-margin-bottom-0">Automatic Urban and Rural Network (AURN)</p></div>
+            </details>
+            <details class="govuk-details govuk-!-margin-top-2 govuk-!-margin-bottom-0">
+              <summary class="govuk-details__summary"><span class="govuk-details__summary-text">Map features</span></summary>
+              <div class="govuk-details__text">
+                <div class="govuk-checkboxes govuk-checkboxes--small">
+                  <div class="govuk-checkboxes__item">
+                    <input class="govuk-checkboxes__input" id="filter-show-inactive" type="checkbox" name="filter-show-inactive" value="inactive" checked>
+                    <label class="govuk-label govuk-checkboxes__label" for="filter-show-inactive">Show closed and inactive stations</label>
+                  </div>
+                </div>
+              </div>
+            </details>
+          </div>
         </div>
       </div>
     </div>
@@ -177,8 +226,57 @@ beforeEach(async () => {
           <button class="aq-filter-panel__tab" id="filter-tab-other" aria-pressed="false"><span>Other pollutants</span></button>
         </div>
         <div class="aq-filter-panel__scroll">
-          <div id="filter-mount" class="aq-filter-panel__mount"></div>
-          <div id="filter-sections"></div>
+          <div id="filter-mount" class="aq-filter-panel__mount">
+            <div id="filter-daqi-content">
+              <div class="govuk-form-group">
+                <fieldset class="govuk-fieldset">
+                  <legend class="govuk-fieldset__legend govuk-visually-hidden">Select pollutants to display on the map</legend>
+                  <div class="govuk-checkboxes govuk-checkboxes--small">
+                    <div class="govuk-checkboxes__item">
+                      <input class="govuk-checkboxes__input" id="filter-pollutant-1" type="checkbox" name="filter-pollutant" value="PM25" checked>
+                      <label class="govuk-label govuk-checkboxes__label" for="filter-pollutant-1">Fine particulate matter (PM2.5)</label>
+                    </div>
+                    <div class="govuk-checkboxes__item">
+                      <input class="govuk-checkboxes__input" id="filter-pollutant-2" type="checkbox" name="filter-pollutant" value="PM10" checked>
+                      <label class="govuk-label govuk-checkboxes__label" for="filter-pollutant-2">Particulate matter (PM10)</label>
+                    </div>
+                    <div class="govuk-checkboxes__item">
+                      <input class="govuk-checkboxes__input" id="filter-pollutant-3" type="checkbox" name="filter-pollutant" value="NO2" checked>
+                      <label class="govuk-label govuk-checkboxes__label" for="filter-pollutant-3">Nitrogen dioxide (NO2)</label>
+                    </div>
+                    <div class="govuk-checkboxes__item">
+                      <input class="govuk-checkboxes__input" id="filter-pollutant-4" type="checkbox" name="filter-pollutant" value="O3" checked>
+                      <label class="govuk-label govuk-checkboxes__label" for="filter-pollutant-4">Ozone (O3)</label>
+                    </div>
+                    <div class="govuk-checkboxes__item">
+                      <input class="govuk-checkboxes__input" id="filter-pollutant-5" type="checkbox" name="filter-pollutant" value="SO2" checked>
+                      <label class="govuk-label govuk-checkboxes__label" for="filter-pollutant-5">Sulphur dioxide (SO2)</label>
+                    </div>
+                  </div>
+                </fieldset>
+              </div>
+            </div>
+            <div id="filter-other-content" hidden>
+              <p class="govuk-body-s govuk-!-margin-top-2">Other pollutant networks are not yet available.</p>
+            </div>
+          </div>
+          <div id="filter-sections">
+            <details class="govuk-details govuk-!-margin-top-3 govuk-!-margin-bottom-0">
+              <summary class="govuk-details__summary"><span class="govuk-details__summary-text">Data sources</span></summary>
+              <div class="govuk-details__text"><p class="govuk-body-s govuk-!-margin-bottom-0">Automatic Urban and Rural Network (AURN)</p></div>
+            </details>
+            <details class="govuk-details govuk-!-margin-top-2 govuk-!-margin-bottom-0">
+              <summary class="govuk-details__summary"><span class="govuk-details__summary-text">Map features</span></summary>
+              <div class="govuk-details__text">
+                <div class="govuk-checkboxes govuk-checkboxes--small">
+                  <div class="govuk-checkboxes__item">
+                    <input class="govuk-checkboxes__input" id="filter-show-inactive" type="checkbox" name="filter-show-inactive" value="inactive" checked>
+                    <label class="govuk-label govuk-checkboxes__label" for="filter-show-inactive">Show closed and inactive stations</label>
+                  </div>
+                </div>
+              </div>
+            </details>
+          </div>
         </div>
       </div>
     </div>
@@ -741,6 +839,12 @@ describe('#station panel', () => {
     expect(document.getElementById('map-key-overlay').hidden).toBe(true)
   })
 
+  test('Should do nothing when station panel element is not in DOM', async () => {
+    await loadStationsAndIdle([station])
+    document.getElementById('station-panel').remove()
+    expect(() => mapClickCallback({ coords: [-0.1, 51.5] })).not.toThrow()
+  })
+
   test('Should render an unparseable openDate as-is in the panel', async () => {
     const stationWithBadDate = { ...station, openDate: 'not-a-date' }
     await loadStationsAndIdle([stationWithBadDate])
@@ -972,8 +1076,8 @@ describe('#filter panel', () => {
   test('Should switch to Other pollutants tab when clicked', async () => {
     await loadAndIdleWithFilter()
     document.getElementById('filter-tab-other').click()
-    const mount = document.getElementById('filter-mount')
-    expect(mount.textContent).toContain('not yet available')
+    expect(document.getElementById('filter-other-content').hidden).toBe(false)
+    expect(document.getElementById('filter-daqi-content').hidden).toBe(true)
     expect(
       document.getElementById('filter-tab-other').getAttribute('aria-pressed')
     ).toBe('true')
@@ -986,8 +1090,8 @@ describe('#filter panel', () => {
     await loadAndIdleWithFilter()
     document.getElementById('filter-tab-other').click()
     document.getElementById('filter-tab-daqi').click()
-    const mount = document.getElementById('filter-mount')
-    expect(mount.textContent).toContain('Nitrogen dioxide')
+    expect(document.getElementById('filter-daqi-content').hidden).toBe(false)
+    expect(document.getElementById('filter-other-content').hidden).toBe(true)
     expect(
       document.getElementById('filter-tab-daqi').getAttribute('aria-pressed')
     ).toBe('true')
@@ -1121,17 +1225,15 @@ describe('#filter panel', () => {
     expect(mockMapInstance.addMarker).not.toHaveBeenCalled()
   })
 
-  test('Should render show-inactive checkbox as unchecked after being toggled off', async () => {
+  test('Should keep show-inactive checkbox unchecked after being toggled off', async () => {
     await loadAndIdleWithFilter()
-    // Toggle show-inactive off
     const showInactiveCheckbox = document.getElementById('filter-show-inactive')
     showInactiveCheckbox.checked = false
     showInactiveCheckbox.dispatchEvent(new Event('change', { bubbles: true }))
-    // Switch tabs to force re-render of filter sections
+    // Switch tabs — HTML is not rebuilt, so checked state is preserved
     document.getElementById('filter-tab-other').click()
     document.getElementById('filter-tab-daqi').click()
-    const reRendered = document.getElementById('filter-show-inactive')
-    expect(reRendered.hasAttribute('checked')).toBe(false)
+    expect(document.getElementById('filter-show-inactive').checked).toBe(false)
   })
 
   test('Should keep an active station visible when show inactive is unchecked', async () => {
@@ -1154,5 +1256,58 @@ describe('#filter panel', () => {
       [-0.1, 51.5],
       expect.any(Object)
     )
+  })
+
+  test('Should skip the currently selected station when re-plotting all markers', async () => {
+    const stations = [
+      {
+        localSiteID: 'UKA001',
+        location: { coordinates: [51.5, -0.1] },
+        pollutants: ['NO2']
+      }
+    ]
+    await loadAndIdleWithFilter({ stations })
+    mapClickCallback({ coords: [-0.1, 51.5] })
+    mockMapInstance.addMarker.mockClear()
+    mockMapInstance.removeMarker.mockClear()
+    // Switch tab triggers onFilterChange → plotAllMarkers
+    document.getElementById('filter-tab-other').click()
+    // UKA001 is the selected marker — plotAllMarkers must skip it entirely
+    expect(mockMapInstance.addMarker).not.toHaveBeenCalledWith(
+      'ms-UKA001',
+      expect.any(Array),
+      expect.any(Object)
+    )
+    expect(mockMapInstance.removeMarker).not.toHaveBeenCalledWith('ms-UKA001')
+  })
+
+  test('Should do nothing when filter panel element is not in DOM', async () => {
+    resetDom()
+    document.getElementById('filter-panel').remove()
+    stubFetch()
+    vi.resetModules()
+    await import('./map.js')
+    expect(() => mapReadyCallback()).not.toThrow()
+  })
+
+  test('Should handle tab clicks when content divs are not in DOM', async () => {
+    resetDom()
+    document.getElementById('filter-daqi-content').remove()
+    document.getElementById('filter-other-content').remove()
+    stubFetch()
+    vi.resetModules()
+    await import('./map.js')
+    mapReadyCallback()
+    expect(() => document.getElementById('filter-tab-other').click()).not.toThrow()
+    expect(() => document.getElementById('filter-tab-daqi').click()).not.toThrow()
+  })
+
+  test('Should not bind scroll listener when scroll container is not in DOM', async () => {
+    resetDom()
+    document.querySelector('.aq-filter-panel__scroll').remove()
+    stubFetch()
+    vi.resetModules()
+    await import('./map.js')
+    expect(() => mapReadyCallback()).not.toThrow()
   })
 })
