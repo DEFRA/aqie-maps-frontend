@@ -151,6 +151,7 @@ Test files are **co-located** with the module they test (e.g. `controller.test.j
 - Use neostandard for linting
 - JSDoc comments for functions and classes (pragmatic approach)
 - **Always use curly braces for `if` / `else` / `else if` blocks** — even for single-line bodies. Omitting braces is a common source of bugs when statements are added later.
+
   ```javascript
   // ✅ correct
   if (condition) {
