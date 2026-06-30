@@ -51,6 +51,34 @@ function stationMatchesFilter(station) {
  * this function only shows, hides and reads DOM state.
  * @param {Function} onFilterChange - called to re-plot markers when the filter changes
  */
+/**
+ * Collapses the filter panel and updates the toggle button state.
+ * @param {HTMLElement} panel
+ * @param {HTMLElement} reopenBtn
+ */
+function closeFilterPanel(panel, reopenBtn) {
+  panel.hidden = true
+  reopenBtn.setAttribute('aria-expanded', 'false')
+  reopenBtn.focus()
+}
+
+/**
+ * Expands the filter panel and updates the toggle button state.
+ * @param {HTMLElement} panel
+ * @param {HTMLElement} reopenBtn
+ */
+function openFilterPanel(panel, reopenBtn) {
+  panel.hidden = false
+  reopenBtn.setAttribute('aria-expanded', 'true')
+  panel.focus()
+}
+
+/**
+ * Wires up the filter panel tabs, checkboxes and open/close behaviour.
+ * The HTML for the panel content is pre-rendered server-side by Nunjucks;
+ * this function only shows, hides and reads DOM state.
+ * @param {Function} onFilterChange - called to re-plot markers when the filter changes
+ */
 function initFilterPanel(onFilterChange) {
   const panel = document.getElementById('filter-panel')
   if (!panel) {
@@ -63,15 +91,13 @@ function initFilterPanel(onFilterChange) {
   const otherContent = document.getElementById('filter-other-content')
   document
     .getElementById('filter-panel-close')
-    .addEventListener('click', () => {
-      panel.hidden = true
-      reopenBtn.hidden = false
-      reopenBtn.focus()
-    })
+    .addEventListener('click', () => closeFilterPanel(panel, reopenBtn))
   reopenBtn?.addEventListener('click', () => {
-    panel.hidden = false
-    reopenBtn.hidden = true
-    panel.focus()
+    if (panel.hidden) {
+      openFilterPanel(panel, reopenBtn)
+    } else {
+      closeFilterPanel(panel, reopenBtn)
+    }
   })
   tabDaqi.addEventListener('click', () => {
     filterState.mode = 'daqi'

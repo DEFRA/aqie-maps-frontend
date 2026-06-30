@@ -149,7 +149,7 @@ function resetDom() {
       </div>
     </div>
     <div class="reopen-stack" aria-label="Map actions">
-      <button class="aq-map__menu reopen-btn" id="filter-button" aria-label="Open filter panel" hidden>
+      <button class="aq-map__menu reopen-btn" id="filter-button" aria-label="Toggle filter panel" aria-expanded="true">
         <span class="reopen-text">Menu</span>
       </button>
       <button class="aq-map__menu reopen-btn" id="key-button" aria-label="Toggle map key">
@@ -281,7 +281,7 @@ beforeEach(async () => {
       </div>
     </div>
     <div class="reopen-stack" aria-label="Map actions">
-      <button class="aq-map__menu reopen-btn" id="filter-button" aria-label="Open filter panel" hidden>
+      <button class="aq-map__menu reopen-btn" id="filter-button" aria-label="Toggle filter panel" aria-expanded="true">
         <span class="reopen-text">Menu</span>
       </button>
       <button class="aq-map__menu reopen-btn" id="key-button" aria-label="Toggle map key">
@@ -1053,24 +1053,27 @@ describe('#filter panel', () => {
     )
   })
 
-  test('Should hide filter panel and show Menu button when close button clicked', async () => {
+  test('Should hide filter panel when close button clicked', async () => {
     await loadAndIdleWithFilter()
     const panel = document.getElementById('filter-panel')
     const menuBtn = document.getElementById('filter-button')
     document.getElementById('filter-panel-close').click()
     expect(panel.hidden).toBe(true)
-    expect(menuBtn.hidden).toBe(false)
+    expect(menuBtn.getAttribute('aria-expanded')).toBe('false')
   })
 
-  test('Should show filter panel and hide Menu button when Menu button clicked', async () => {
+  test('Should toggle filter panel open and closed with Menu button', async () => {
     await loadAndIdleWithFilter()
     const panel = document.getElementById('filter-panel')
     const menuBtn = document.getElementById('filter-button')
-    document.getElementById('filter-panel-close').click()
+    // First click — closes
+    menuBtn.click()
     expect(panel.hidden).toBe(true)
+    expect(menuBtn.getAttribute('aria-expanded')).toBe('false')
+    // Second click — reopens
     menuBtn.click()
     expect(panel.hidden).toBe(false)
-    expect(menuBtn.hidden).toBe(true)
+    expect(menuBtn.getAttribute('aria-expanded')).toBe('true')
   })
 
   test('Should switch to Other pollutants tab when clicked', async () => {
