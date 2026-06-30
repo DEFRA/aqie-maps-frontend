@@ -1298,8 +1298,12 @@ describe('#filter panel', () => {
     vi.resetModules()
     await import('./map.js')
     mapReadyCallback()
-    expect(() => document.getElementById('filter-tab-other').click()).not.toThrow()
-    expect(() => document.getElementById('filter-tab-daqi').click()).not.toThrow()
+    expect(() =>
+      document.getElementById('filter-tab-other').click()
+    ).not.toThrow()
+    expect(() =>
+      document.getElementById('filter-tab-daqi').click()
+    ).not.toThrow()
   })
 
   test('Should not bind scroll listener when scroll container is not in DOM', async () => {
