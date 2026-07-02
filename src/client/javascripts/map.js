@@ -1,4 +1,14 @@
-/* global defra */
+/* global defra, history */
+
+import { daqiBand, daqiMarkerOptions } from './map-daqi.js'
+import {
+  escapeHtml,
+  formatDate,
+  NOT_AVAILABLE,
+  pollutantLabels,
+  stationStatusTag
+} from './map-utils.js'
+import { stationMatchesFilter, initFilterPanel } from './map-filter-panel.js'
 
 const defaultZoom = 5.4842222
 const ukCentreLng = -1.4649
@@ -58,70 +68,6 @@ function hasValidCoords(station) {
     return false
   }
   return true
-}
-
-// DAQI background colours indexed by DAQI value (1–10); index 0 is unused.
-// Yellow (#ffdd00) values 4–6 need dark text.
-const daqiBg = [
-  null,
-  '#00703c',
-  '#00703c',
-  '#00703c',
-  '#ffdd00',
-  '#ffdd00',
-  '#ffdd00',
-  '#d4351c',
-  '#d4351c',
-  '#d4351c',
-  '#0b0c0c'
-]
-
-const daqiBand = [
-  null,
-  'Low',
-  'Low',
-  'Low',
-  'Moderate',
-  'Moderate',
-  'Moderate',
-  'High',
-  'High',
-  'High',
-  'Very High'
-]
-
-/**
- * Builds SVG marker options coloured by DAQI value.
- * Falls back to grey when no DAQI value is available.
- * @param {number|null} daqiValue - DAQI index 1–10, or null
- * @param {boolean} selected
- * @returns {{ symbolSvgContent: string, viewBox: string, anchor: [number, number] }}
- */
-function daqiMarkerOptions(daqiValue, selected) {
-  let bg
-  if (daqiValue && daqiBg[daqiValue]) {
-    bg = daqiBg[daqiValue]
-  } else if (selected) {
-    bg = '#555555'
-  } else {
-    bg = '#777777'
-  }
-  const strokeAttr = selected
-    ? 'stroke="#0b0c0c" stroke-width="2"'
-    : 'stroke="white" stroke-width="2"'
-  const textFill = bg === '#ffdd00' ? '#0b0c0c' : '#ffffff'
-  const label = daqiValue
-    ? `<text x="19" y="24" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" font-weight="bold" fill="${textFill}">${daqiValue}</text>`
-    : ''
-  const shadow =
-    '<defs><filter id="ds" x="-50%" y="-50%" width="200%" height="200%">' +
-    '<feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000000" flood-opacity="0.3"/>' +
-    '</filter></defs>'
-  return {
-    symbolSvgContent: `${shadow}<circle cx="19" cy="19" r="14" fill="${bg}" ${strokeAttr} filter="url(#ds)"/>${label}`,
-    viewBox: '0 0 38 38',
-    anchor: [0.5, 0.5]
-  }
 }
 
 let stations = []
@@ -233,93 +179,19 @@ function hideKeyOverlay(byUser) {
 }
 
 /**
- * Renders the DAQI 1–10 colour scale into #map-key-body.
- */
-function renderKeyOverlay() {
-  const body = document.getElementById('map-key-body')
-  if (!body) {
-    return
-  }
-  body.innerHTML =
-    '<div class="aq-daqi-scale">' +
-    '<div class="aq-daqi-scale__bands">' +
-    '<div class="aq-daqi-scale__band aq-daqi-scale__band--green">1</div>' +
-    '<div class="aq-daqi-scale__band aq-daqi-scale__band--green">2</div>' +
-    '<div class="aq-daqi-scale__band aq-daqi-scale__band--green">3</div>' +
-    '<div class="aq-daqi-scale__band aq-daqi-scale__band--yellow">4</div>' +
-    '<div class="aq-daqi-scale__band aq-daqi-scale__band--yellow">5</div>' +
-    '<div class="aq-daqi-scale__band aq-daqi-scale__band--yellow">6</div>' +
-    '<div class="aq-daqi-scale__band aq-daqi-scale__band--red">7</div>' +
-    '<div class="aq-daqi-scale__band aq-daqi-scale__band--red">8</div>' +
-    '<div class="aq-daqi-scale__band aq-daqi-scale__band--red">9</div>' +
-    '<div class="aq-daqi-scale__band aq-daqi-scale__band--black">10</div>' +
-    '</div>' +
-    '<div class="aq-daqi-scale__labels">' +
-    '<div class="aq-daqi-scale__label-group aq-daqi-scale__label-group--low">' +
-    '<span class="aq-daqi-scale__level">Low</span>' +
-    '<span class="aq-daqi-scale__range">1 to 3</span>' +
-    '</div>' +
-    '<div class="aq-daqi-scale__label-group aq-daqi-scale__label-group--moderate">' +
-    '<span class="aq-daqi-scale__level">Moderate</span>' +
-    '<span class="aq-daqi-scale__range">4 to 6</span>' +
-    '</div>' +
-    '<div class="aq-daqi-scale__label-group aq-daqi-scale__label-group--high">' +
-    '<span class="aq-daqi-scale__level">High</span>' +
-    '<span class="aq-daqi-scale__range">7 to 9</span>' +
-    '</div>' +
-    '<div class="aq-daqi-scale__label-group aq-daqi-scale__label-group--veryhigh">' +
-    '<span class="aq-daqi-scale__level">Very high</span>' +
-    '<span class="aq-daqi-scale__range">10</span>' +
-    '</div>' +
-    '</div>' +
-    '</div>'
-}
-
-/**
- * Initialises the map key overlay with a close button and DAQI scale.
+ * Wires up the map key close button.
  */
 function initKeyOverlay() {
-  const overlay = document.getElementById(MAP_KEY_OVERLAY_ID)
-  if (!overlay) {
-    return
-  }
-  overlay.innerHTML =
-    '<button id="map-key-close" class="aq-map-key__close" aria-label="Close map key">' +
-    '<svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 20 20">' +
-    '<path d="M10,8.6L15.6,3L17,4.4L11.4,10L17,15.6L15.6,17L10,11.4L4.4,17L3,15.6L8.6,10L3,4.4L4.4,3L10,8.6Z"/>' +
-    '</svg>' +
-    '<span class="govuk-visually-hidden">Close map key</span>' +
-    '</button>' +
-    '<div class="aq-map-key__body">' +
-    '<h2 class="govuk-heading-s govuk-!-margin-bottom-1">Map key</h2>' +
-    '<p class="govuk-body-s govuk-!-margin-bottom-2">Daily Air Quality Index (DAQI)</p>' +
-    '<div id="map-key-body"></div>' +
-    '</div>'
-  renderKeyOverlay()
-  document.getElementById('map-key-close').addEventListener('click', () => {
+  document.getElementById('map-key-close')?.addEventListener('click', () => {
     hideKeyOverlay(true)
   })
 }
 
 /**
- * Initialises the reopen stack with a Key toggle button.
+ * Wires up the Key toggle button in the reopen stack.
  */
 function initReopenStack() {
-  const stack = document.querySelector('.reopen-stack')
-  if (!stack) {
-    return
-  }
-  stack.innerHTML =
-    '<button class="aq-map__menu reopen-btn" id="key-button" aria-label="Toggle map key">' +
-    '<svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 20 20" fill-rule="evenodd" fill="currentColor">' +
-    '<circle cx="3.5" cy="4" r="1.5"></circle>' +
-    '<circle cx="3.5" cy="10" r="1.5"></circle>' +
-    '<circle cx="3.5" cy="16" r="1.5"></circle>' +
-    '<path d="M7 4h11M7 10h11M7 16h11" fill="none" stroke="currentColor" stroke-width="2"></path>' +
-    '</svg>' +
-    '<span class="reopen-text">Key</span>' +
-    '</button>'
-  document.getElementById('key-button').addEventListener('click', () => {
+  document.getElementById('key-button')?.addEventListener('click', () => {
     const overlay = document.getElementById(MAP_KEY_OVERLAY_ID)
     if (overlay?.hidden) {
       keyClosedByUser = false
@@ -330,85 +202,40 @@ function initReopenStack() {
   })
 }
 
-// Plot all station markers and initialise map UI on first render.
-map.on('map:firstidle', () => {
+/**
+ * (Re)plots all markers that pass the current filter, removing any that no longer match.
+ */
+function plotAllMarkers() {
   stations.forEach((station) => {
     if (!hasValidCoords(station)) {
       return
     }
-    map.addMarker(
-      stationMarkerId(station),
-      stationMapCoords(station),
-      daqiMarkerOptions(stationDaqi(station), false)
-    )
+    const id = stationMarkerId(station)
+    if (id === selectedMarkerId) {
+      return
+    }
+    if (stationMatchesFilter(station)) {
+      map.addMarker(
+        id,
+        stationMapCoords(station),
+        daqiMarkerOptions(stationDaqi(station), false)
+      )
+    } else {
+      map.removeMarker(id)
+    }
   })
+}
+
+// Plot all station markers and initialise map UI on first render.
+map.on('map:firstidle', () => {
+  plotAllMarkers()
   initKeyOverlay()
   initReopenStack()
-})
-
-/**
- * Prevents XSS when setting innerHTML with user-sourced station data.
- * @param {string} str
- * @returns {string}
- */
-function escapeHtml(str) {
-  return String(str)
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-}
-
-/**
- * Formats an ISO date string to a human-readable en-GB date.
- * @param {string} dateStr
- * @returns {string}
- */
-function formatDate(dateStr) {
-  if (!dateStr) {
-    return ''
-  }
-  const date = new Date(dateStr)
-  if (Number.isNaN(date.getTime())) {
-    return dateStr
-  }
-  return date.toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric'
+  initFilterPanel(plotAllMarkers)
+  document.getElementById('exit-map')?.addEventListener('click', () => {
+    history.back()
   })
-}
-
-const NOT_AVAILABLE = 'Not available'
-
-const pollutantLabels = {
-  NO2: 'NO₂',
-  O3: 'O₃',
-  SO2: 'SO₂',
-  PM25: 'PM2.5',
-  PM10: 'PM10'
-}
-
-/**
- * Returns an HTML status tag string for the station name heading, or '' if no tag is needed.
- * @param {string} status - lowercased station status
- * @param {boolean} isClosed
- * @returns {string}
- */
-function stationStatusTag(status, isClosed) {
-  const tagLabel =
-    status === 'current'
-      ? 'Active'
-      : status.charAt(0).toUpperCase() + status.slice(1)
-
-  if (status === 'current') {
-    return ` <strong class="aq-station-tag aq-station-tag--active">${escapeHtml(tagLabel)}</strong>`
-  }
-  if (isClosed) {
-    return ` <strong class="aq-station-tag aq-station-tag--closed">${escapeHtml(tagLabel)}</strong>`
-  }
-  return ''
-}
+})
 
 /**
  * Builds the DAQI detail row for the station panel, or null if unavailable.
