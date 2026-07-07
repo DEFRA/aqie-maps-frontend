@@ -17,6 +17,29 @@ const ukCentreLat = 52.5619
 // Maximum distance (degrees) between a station and a forecast point to be considered a match.
 const FORECAST_MATCH_RADIUS_DEG = 0.05
 
+const DAY_ABBR = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+/**
+ * Returns today's DAQI value from a forecast entry.
+ *
+ * The forecast array contains values for each day of the week (e.g. Mon–Fri).
+ * Rather than assuming index 0 is always today — which breaks if the nightly
+ * refresh cron job hasn't run yet and the stored data is from the previous day
+ * — we match by the current day abbreviation instead.
+ *
+ * Falls back to index 0 if no matching day entry is found.
+ *
+ * @param {{ forecast: Array<{ day: string, value: number }> }} forecastEntry
+ * @returns {number}
+ */
+function todayDaqiValue(forecastEntry) {
+  const todayAbbr = DAY_ABBR[new Date().getDay()]
+  const entry =
+    forecastEntry.forecast.find((f) => f.day === todayAbbr) ??
+    forecastEntry.forecast[0]
+  return entry.value
+}
+
 // Maximum squared distance (degrees²) for a map click to select a station (~11 km at mid zoom).
 const CLICK_SELECT_MAX_SQUARED_DEG = 0.01
 
@@ -144,7 +167,7 @@ function stationDaqi(station) {
     Array.isArray(forecast.forecast) &&
     forecast.forecast.length > 0
   ) {
-    return forecast.forecast[0].value
+    return todayDaqiValue(forecast)
   }
   return null
 }
@@ -251,7 +274,7 @@ function buildDaqiRow(station) {
   ) {
     return null
   }
-  const todayValue = forecast.forecast[0].value
+  const todayValue = todayDaqiValue(forecast)
   const band = daqiBand[todayValue] || ''
   const bandKey = band.toLowerCase().replaceAll(' ', '')
   const daqiClass = bandKey
