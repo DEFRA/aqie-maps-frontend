@@ -185,6 +185,7 @@ function showKeyOverlay() {
   if (overlay) {
     overlay.hidden = false
   }
+  document.getElementById('key-button')?.setAttribute('aria-expanded', 'true')
 }
 
 /**
@@ -196,6 +197,7 @@ function hideKeyOverlay(byUser) {
   if (overlay) {
     overlay.hidden = true
   }
+  document.getElementById('key-button')?.setAttribute('aria-expanded', 'false')
   if (byUser) {
     keyClosedByUser = true
   }
@@ -223,6 +225,20 @@ function initReopenStack() {
       hideKeyOverlay(true)
     }
   })
+}
+
+/**
+ * Wires up keyboard interaction for the station information panel.
+ * Closes the panel when Escape is pressed.
+ */
+function initStationPanelKeyboard() {
+  document
+    .getElementById('station-panel')
+    ?.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        closeStationPanel()
+      }
+    })
 }
 
 /**
@@ -254,6 +270,7 @@ map.on('map:firstidle', () => {
   plotAllMarkers()
   initKeyOverlay()
   initReopenStack()
+  initStationPanelKeyboard()
   initFilterPanel(plotAllMarkers)
   document.getElementById('exit-map')?.addEventListener('click', () => {
     history.back()
@@ -367,11 +384,14 @@ function showStationPanel(station) {
     )
     .join('')
 
+  panelTrigger = document.activeElement
   panel.classList.add('visible')
   hideKeyOverlay(false)
+  panel.focus()
 }
 
 let selectedMarkerId = null
+let panelTrigger = null
 
 /**
  * Restores the previously selected marker to its DAQI colour and hides the station panel.
@@ -395,6 +415,8 @@ function closeStationPanel() {
   if (!keyClosedByUser) {
     showKeyOverlay()
   }
+  panelTrigger?.focus()
+  panelTrigger = null
 }
 
 /**

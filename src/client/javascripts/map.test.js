@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+/* global KeyboardEvent */
 import { vi, beforeEach, afterEach, describe, test, expect } from 'vitest'
 
 const defaultZoom = 5.4842222
@@ -440,9 +441,20 @@ describe('#monitoring stations', () => {
     })
   })
 
-  test('Should skip stations with missing location', async () => {
+  test.each([
+    ['missing location', { localSiteID: 'NOLOC' }],
+    ['null location', { localSiteID: 'UKA001', location: null }],
+    [
+      'non-array coordinates',
+      { localSiteID: 'UKA001', location: { coordinates: 'invalid' } }
+    ],
+    [
+      'NaN coordinates',
+      { localSiteID: 'NANST', location: { coordinates: [Number.NaN, -0.1] } }
+    ]
+  ])('Should skip stations with %s', async (_, invalidStation) => {
     const stations = [
-      { localSiteID: 'NOLOC' },
+      invalidStation,
       { localSiteID: 'UKA002', location: { coordinates: [52, -1] } }
     ]
     vi.stubGlobal(
@@ -459,44 +471,8 @@ describe('#monitoring stations', () => {
     expect(mockMapInstance.addMarker).toHaveBeenCalledWith(
       'ms-UKA002',
       [-1, 52],
-      expect.objectContaining({ viewBox: '0 0 38 38' })
+      expect.any(Object)
     )
-  })
-
-  test('Should skip stations with null location', async () => {
-    const stations = [
-      { localSiteID: 'UKA001', location: null },
-      { localSiteID: 'UKA002', location: { coordinates: [52, -1] } }
-    ]
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue({
-        ok: true,
-        json: vi.fn().mockResolvedValue({ stations })
-      })
-    )
-    vi.resetModules()
-    await import('./map.js')
-    mapReadyCallback()
-    expect(mockMapInstance.addMarker).toHaveBeenCalledTimes(1)
-  })
-
-  test('Should skip stations with non-array coordinates', async () => {
-    const stations = [
-      { localSiteID: 'UKA001', location: { coordinates: 'invalid' } },
-      { localSiteID: 'UKA002', location: { coordinates: [52, -1] } }
-    ]
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue({
-        ok: true,
-        json: vi.fn().mockResolvedValue({ stations })
-      })
-    )
-    vi.resetModules()
-    await import('./map.js')
-    mapReadyCallback()
-    expect(mockMapInstance.addMarker).toHaveBeenCalledTimes(1)
   })
 
   test('Should not add markers when fetch returns a non-ok response', async () => {
@@ -536,29 +512,6 @@ describe('#monitoring stations', () => {
     await import('./map.js')
     mapReadyCallback()
     expect(mockMapInstance.addMarker).not.toHaveBeenCalled()
-  })
-
-  test('Should skip stations with NaN coordinates', async () => {
-    const stations = [
-      { localSiteID: 'NANST', location: { coordinates: [Number.NaN, -0.1] } },
-      { localSiteID: 'UKA002', location: { coordinates: [52, -1] } }
-    ]
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue({
-        ok: true,
-        json: vi.fn().mockResolvedValue({ stations })
-      })
-    )
-    vi.resetModules()
-    await import('./map.js')
-    mapReadyCallback()
-    expect(mockMapInstance.addMarker).toHaveBeenCalledTimes(1)
-    expect(mockMapInstance.addMarker).toHaveBeenCalledWith(
-      'ms-UKA002',
-      [-1, 52],
-      expect.any(Object)
-    )
   })
 })
 
@@ -601,36 +554,22 @@ describe('#DAQI markers', () => {
     { location: { coordinates: [lat, lng] }, forecast: [{ value }] }
   ]
 
-  test('Should colour marker green for DAQI 1–3', async () => {
-    await loadWithForecasts([station], forecastAt(51.5, -0.1, 2))
+  test.each([
+    ['1–3', 2, '#00703c'],
+    ['4–6', 5, '#ffdd00'],
+    ['7–9', 8, '#d4351c'],
+    ['10', 10, '#0b0c0c']
+  ])('Should colour marker for DAQI %s', async (_, daqiValue, colour) => {
+    await loadWithForecasts([station], forecastAt(51.5, -0.1, daqiValue))
     const call = mockMapInstance.addMarker.mock.calls[0]
-    expect(call[2].symbolSvgContent).toContain('#00703c')
-    expect(call[2].symbolSvgContent).toContain('>2<')
-  })
-
-  test('Should colour marker yellow for DAQI 4–6', async () => {
-    await loadWithForecasts([station], forecastAt(51.5, -0.1, 5))
-    const call = mockMapInstance.addMarker.mock.calls[0]
-    expect(call[2].symbolSvgContent).toContain('#ffdd00')
-    expect(call[2].symbolSvgContent).toContain('>5<')
+    expect(call[2].symbolSvgContent).toContain(colour)
+    expect(call[2].symbolSvgContent).toContain(`>${daqiValue}<`)
   })
 
   test('Should use dark text on yellow DAQI marker', async () => {
     await loadWithForecasts([station], forecastAt(51.5, -0.1, 5))
     const call = mockMapInstance.addMarker.mock.calls[0]
     // Yellow background → text fill must be dark
-    expect(call[2].symbolSvgContent).toContain('fill="#0b0c0c"')
-  })
-
-  test('Should colour marker red for DAQI 7–9', async () => {
-    await loadWithForecasts([station], forecastAt(51.5, -0.1, 8))
-    const call = mockMapInstance.addMarker.mock.calls[0]
-    expect(call[2].symbolSvgContent).toContain('#d4351c')
-  })
-
-  test('Should colour marker black for DAQI 10', async () => {
-    await loadWithForecasts([station], forecastAt(51.5, -0.1, 10))
-    const call = mockMapInstance.addMarker.mock.calls[0]
     expect(call[2].symbolSvgContent).toContain('fill="#0b0c0c"')
   })
 
@@ -923,6 +862,40 @@ describe('#station panel', () => {
     expect(details.innerHTML).not.toContain('aq-daqi-tag--')
     expect(details.textContent).toContain('11')
   })
+
+  test('Should move focus to the station panel when it opens', async () => {
+    await loadStationsAndIdle([station])
+    const panel = document.getElementById('station-panel')
+    const focusSpy = vi.spyOn(panel, 'focus')
+    mapClickCallback({ coords: [-0.1, 51.5] })
+    expect(focusSpy).toHaveBeenCalled()
+  })
+
+  test('Should return focus to the triggering element when the panel closes', async () => {
+    await loadStationsAndIdle([station])
+    const exitBtn = document.getElementById('exit-map')
+    exitBtn.focus()
+    mapClickCallback({ coords: [-0.1, 51.5] })
+    const focusSpy = vi.spyOn(exitBtn, 'focus')
+    document.getElementById('sp-close').click()
+    expect(focusSpy).toHaveBeenCalled()
+  })
+
+  test('Should close the station panel when Escape is pressed', async () => {
+    await loadStationsAndIdle([station])
+    mapClickCallback({ coords: [-0.1, 51.5] })
+    expect(
+      document.getElementById('station-panel').classList.contains('visible')
+    ).toBe(true)
+    document
+      .getElementById('station-panel')
+      .dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })
+      )
+    expect(
+      document.getElementById('station-panel').classList.contains('visible')
+    ).toBe(false)
+  })
 })
 
 async function loadAndIdle() {
@@ -1017,6 +990,21 @@ describe('#map key overlay', () => {
     document.getElementById('exit-map').click()
     expect(backSpy.mock.results[0].value.back).toHaveBeenCalledOnce()
     backSpy.mockRestore()
+  })
+
+  test('Should set aria-expanded to false on key-button when the overlay is hidden', async () => {
+    await loadAndIdle()
+    const keyBtn = document.getElementById('key-button')
+    document.getElementById('key-button').click()
+    expect(keyBtn.getAttribute('aria-expanded')).toBe('false')
+  })
+
+  test('Should set aria-expanded to true on key-button when the overlay is shown', async () => {
+    await loadAndIdle()
+    const keyBtn = document.getElementById('key-button')
+    document.getElementById('key-button').click()
+    document.getElementById('key-button').click()
+    expect(keyBtn.getAttribute('aria-expanded')).toBe('true')
   })
 })
 
