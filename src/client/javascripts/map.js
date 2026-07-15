@@ -1,4 +1,4 @@
-/* global defra, history */
+/* global defra, history, MutationObserver */
 
 import { daqiBand, daqiMarkerOptions } from './map-daqi.js'
 import {
@@ -242,6 +242,70 @@ function initStationPanelKeyboard() {
 }
 
 /**
+ * Patches a marker SVG element with the attributes needed for keyboard access.
+ * The Defra InteractiveMap component renders each marker as an
+ * <svg id="map-marker-{id}" role="img"> element with no tabindex, so keyboard
+ * users cannot reach or activate markers without this patch.
+ * Uses a data attribute to skip re-initialisation when the same DOM element
+ * has its SVG content updated by a later addMarker call.
+ * @param {string} markerId - the marker id passed to map.addMarker (e.g. "ms-UKA001")
+ * @param {{ name?: string }} station
+ */
+function makeMarkerKeyboardAccessible(markerId, station) {
+  const el = document.getElementById(`map-marker-${markerId}`)
+  if (!el || el.dataset.keyboardInit) return
+  el.setAttribute('tabindex', '0')
+  el.setAttribute('role', 'button')
+  el.setAttribute('aria-label', station.name ?? 'Monitoring station')
+  el.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      highlightStation(station)
+    }
+  })
+  el.dataset.keyboardInit = 'true'
+}
+
+/**
+ * Watches the marker container for new elements and patches each one via
+ * makeMarkerKeyboardAccessible as soon as it appears.
+ * This is necessary because the Defra InteractiveMap component creates marker
+ * DOM elements asynchronously — calling document.getElementById() immediately
+ * after map.addMarker() would find nothing.
+ * In the test environment, .im-c-viewport__markers does not exist, so we fall
+ * back to observing #map directly.
+ */
+function initMarkerObserver() {
+  const container =
+    document.querySelector('.im-c-viewport__markers') ??
+    document.getElementById('map')
+  if (!container) {
+    return
+  }
+
+  const markerObserver = new MutationObserver((mutations) => {
+    const addedMarkers = mutations.flatMap((mutation) =>
+      Array.from(mutation.addedNodes)
+    )
+    addedMarkers.forEach((markerEl) => {
+      if (markerEl.nodeType !== 1) {
+        return // Node.ELEMENT_NODE
+      }
+      const markerId = markerEl.id?.replace('map-marker-', '')
+      if (!markerId || markerEl.id === markerId) {
+        return
+      }
+      const station = stations.find((s) => stationMarkerId(s) === markerId)
+      if (station) {
+        makeMarkerKeyboardAccessible(markerId, station)
+      }
+    })
+  })
+
+  markerObserver.observe(container, { childList: true })
+}
+
+/**
  * (Re)plots all markers that pass the current filter, removing any that no longer match.
  */
 function plotAllMarkers() {
@@ -267,10 +331,11 @@ function plotAllMarkers() {
 
 // Plot all station markers and initialise map UI on first render.
 map.on('map:firstidle', () => {
-  plotAllMarkers()
   initKeyOverlay()
   initReopenStack()
   initStationPanelKeyboard()
+  initMarkerObserver()
+  plotAllMarkers()
   initFilterPanel(plotAllMarkers)
   document.getElementById('exit-map')?.addEventListener('click', () => {
     history.back()

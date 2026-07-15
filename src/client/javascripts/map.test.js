@@ -898,6 +898,106 @@ describe('#station panel', () => {
   })
 })
 
+async function loadWithMarkerDom(stationList) {
+  resetDom()
+  vi.stubGlobal(
+    'fetch',
+    vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue({ stations: stationList })
+    })
+  )
+  mockMapInstance.addMarker.mockImplementation((id) => {
+    if (document.getElementById(`map-marker-${id}`)) return
+    const el = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+    el.id = `map-marker-${id}`
+    el.setAttribute('role', 'img')
+    el.setAttribute('aria-label', 'Map marker')
+    document.getElementById('map')?.appendChild(el)
+  })
+  vi.resetModules()
+  await import('./map.js')
+  mapReadyCallback()
+  await Promise.resolve()
+}
+
+describe('#marker keyboard accessibility', () => {
+  const station = {
+    localSiteID: 'UKA001',
+    name: 'London Test',
+    location: { coordinates: [51.5, -0.1] }
+  }
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  test('Should set tabindex="0" on the marker element', async () => {
+    await loadWithMarkerDom([station])
+    expect(
+      document.getElementById('map-marker-ms-UKA001')?.getAttribute('tabindex')
+    ).toBe('0')
+  })
+
+  test('Should set role="button" on the marker element', async () => {
+    await loadWithMarkerDom([station])
+    expect(
+      document.getElementById('map-marker-ms-UKA001')?.getAttribute('role')
+    ).toBe('button')
+  })
+
+  test('Should set aria-label to the station name on the marker element', async () => {
+    await loadWithMarkerDom([station])
+    expect(
+      document
+        .getElementById('map-marker-ms-UKA001')
+        ?.getAttribute('aria-label')
+    ).toBe('London Test')
+  })
+
+  test('Should use "Monitoring station" as aria-label when station has no name', async () => {
+    const unnamed = {
+      localSiteID: 'UKA001',
+      location: { coordinates: [51.5, -0.1] }
+    }
+    await loadWithMarkerDom([unnamed])
+    expect(
+      document
+        .getElementById('map-marker-ms-UKA001')
+        ?.getAttribute('aria-label')
+    ).toBe('Monitoring station')
+  })
+
+  test('Should set data-keyboard-init on the marker element', async () => {
+    await loadWithMarkerDom([station])
+    expect(
+      document.getElementById('map-marker-ms-UKA001')?.dataset.keyboardInit
+    ).toBe('true')
+  })
+
+  test('Should open station panel when Enter is pressed on a marker', async () => {
+    await loadWithMarkerDom([station])
+    document
+      .getElementById('map-marker-ms-UKA001')
+      .dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })
+      )
+    expect(
+      document.getElementById('station-panel').classList.contains('visible')
+    ).toBe(true)
+  })
+
+  test('Should open station panel when Space is pressed on a marker', async () => {
+    await loadWithMarkerDom([station])
+    document
+      .getElementById('map-marker-ms-UKA001')
+      .dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }))
+    expect(
+      document.getElementById('station-panel').classList.contains('visible')
+    ).toBe(true)
+  })
+})
+
 async function loadAndIdle() {
   resetDom()
   stubFetch()
