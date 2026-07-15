@@ -996,6 +996,33 @@ describe('#marker keyboard accessibility', () => {
       document.getElementById('station-panel').classList.contains('visible')
     ).toBe(true)
   })
+
+  test('Should not throw when neither the marker container nor #map exists in the DOM', async () => {
+    resetDom()
+    document.getElementById('map').remove()
+    stubFetch()
+    vi.resetModules()
+    await import('./map.js')
+    expect(() => mapReadyCallback()).not.toThrow()
+  })
+
+  test('Should skip non-element nodes added to the marker container', async () => {
+    await loadWithMarkerDom([station])
+    document.getElementById('map').appendChild(document.createTextNode('noise'))
+    await Promise.resolve()
+    expect(
+      document.getElementById('map-marker-ms-UKA001')?.getAttribute('tabindex')
+    ).toBe('0')
+  })
+
+  test('Should skip elements whose id does not start with map-marker-', async () => {
+    await loadWithMarkerDom([station])
+    const nonMarker = document.createElement('div')
+    nonMarker.id = 'some-other-element'
+    document.getElementById('map').appendChild(nonMarker)
+    await Promise.resolve()
+    expect(nonMarker.getAttribute('tabindex')).toBeNull()
+  })
 })
 
 async function loadAndIdle() {
