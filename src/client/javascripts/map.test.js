@@ -555,23 +555,20 @@ describe('#DAQI markers', () => {
   ]
 
   test.each([
-    ['1–3', 2, '#00703c'],
-    ['4–6', 5, '#ffdd00'],
-    ['7–9', 8, '#d4351c'],
-    ['10', 10, '#0b0c0c']
-  ])('Should colour marker for DAQI %s', async (_, daqiValue, colour) => {
-    await loadWithForecasts([station], forecastAt(51.5, -0.1, daqiValue))
-    const call = mockMapInstance.addMarker.mock.calls[0]
-    expect(call[2].symbolSvgContent).toContain(colour)
-    expect(call[2].symbolSvgContent).toContain(`>${daqiValue}<`)
-  })
-
-  test('Should use dark text on yellow DAQI marker', async () => {
-    await loadWithForecasts([station], forecastAt(51.5, -0.1, 5))
-    const call = mockMapInstance.addMarker.mock.calls[0]
-    // Yellow background → text fill must be dark
-    expect(call[2].symbolSvgContent).toContain('fill="#0b0c0c"')
-  })
+    ['1–3', 2, '#00703c', 'fill="#ffffff"'],
+    ['4–6', 5, '#ffdd00', 'fill="#0b0c0c"'],
+    ['7–9', 8, '#d4351c', 'fill="#ffffff"'],
+    ['10', 10, '#0b0c0c', 'fill="#ffffff"']
+  ])(
+    'Should colour marker for DAQI %s',
+    async (_, daqiValue, backgroundColour, textColour) => {
+      await loadWithForecasts([station], forecastAt(51.5, -0.1, daqiValue))
+      const call = mockMapInstance.addMarker.mock.calls[0]
+      expect(call[2].symbolSvgContent).toContain(backgroundColour)
+      expect(call[2].symbolSvgContent).toContain(textColour)
+      expect(call[2].symbolSvgContent).toContain(`>${daqiValue}<`)
+    }
+  )
 
   test('Should use grey marker when no forecast is close enough', async () => {
     // Forecast is > 0.05 degrees away
