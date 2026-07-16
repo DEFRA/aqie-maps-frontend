@@ -19,6 +19,13 @@ const FORECAST_MATCH_RADIUS_DEG = 0.05
 
 const DAY_ABBR = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
+// Maximum squared distance (degrees²) for a map click to select a station (~11 km at mid zoom).
+const CLICK_SELECT_MAX_SQUARED_DEG = 0.01
+
+const MAP_KEY_OVERLAY_ID = 'map-key-overlay'
+const keyButtonElement = document.getElementById('key-button')
+const stationPanelElement = document.getElementById('station-panel')
+
 /**
  * Returns today's DAQI value from a forecast entry.
  *
@@ -39,9 +46,6 @@ function todayDaqiValue(forecastEntry) {
     forecastEntry.forecast[0]
   return entry.value
 }
-
-// Maximum squared distance (degrees²) for a map click to select a station (~11 km at mid zoom).
-const CLICK_SELECT_MAX_SQUARED_DEG = 0.01
 
 const map = new defra.InteractiveMap('map', {
   mapProvider: defra.maplibreProvider(),
@@ -175,8 +179,6 @@ function stationDaqi(station) {
 // Whether the user manually closed the key overlay (prevents auto-reopen on panel close).
 let keyClosedByUser = false
 
-const MAP_KEY_OVERLAY_ID = 'map-key-overlay'
-
 /**
  * Shows the map key overlay.
  */
@@ -185,7 +187,7 @@ function showKeyOverlay() {
   if (overlay) {
     overlay.hidden = false
   }
-  document.getElementById('key-button')?.setAttribute('aria-expanded', 'true')
+  keyButtonElement?.setAttribute('aria-expanded', 'true')
 }
 
 /**
@@ -197,7 +199,7 @@ function hideKeyOverlay(byUser) {
   if (overlay) {
     overlay.hidden = true
   }
-  document.getElementById('key-button')?.setAttribute('aria-expanded', 'false')
+  keyButtonElement?.setAttribute('aria-expanded', 'false')
   if (byUser) {
     keyClosedByUser = true
   }
@@ -216,7 +218,7 @@ function initKeyOverlay() {
  * Wires up the Key toggle button in the reopen stack.
  */
 function initReopenStack() {
-  document.getElementById('key-button')?.addEventListener('click', () => {
+  keyButtonElement?.addEventListener('click', () => {
     const overlay = document.getElementById(MAP_KEY_OVERLAY_ID)
     if (overlay?.hidden) {
       keyClosedByUser = false
@@ -232,13 +234,11 @@ function initReopenStack() {
  * Closes the panel when Escape is pressed.
  */
 function initStationPanelKeyboard() {
-  document
-    .getElementById('station-panel')
-    ?.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape') {
-        closeStationPanel()
-      }
-    })
+  stationPanelElement?.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      closeStationPanel()
+    }
+  })
 }
 
 /**
@@ -423,8 +423,7 @@ function buildPanelRows(station, isClosed) {
  *   openDate?: string, closeDate?: string }} station
  */
 function showStationPanel(station) {
-  const panel = document.getElementById('station-panel')
-  if (!panel) {
+  if (!stationPanelElement?.isConnected) {
     return
   }
 
@@ -450,9 +449,9 @@ function showStationPanel(station) {
     .join('')
 
   panelTrigger = document.activeElement
-  panel.classList.add('visible')
+  stationPanelElement.classList.add('visible')
   hideKeyOverlay(false)
-  panel.focus()
+  stationPanelElement.focus()
 }
 
 let selectedMarkerId = null
@@ -462,9 +461,8 @@ let panelTrigger = null
  * Restores the previously selected marker to its DAQI colour and hides the station panel.
  */
 function closeStationPanel() {
-  const panel = document.getElementById('station-panel')
-  if (panel) {
-    panel.classList.remove('visible')
+  if (stationPanelElement) {
+    stationPanelElement.classList.remove('visible')
   }
   if (selectedMarkerId) {
     const prev = stations.find((s) => stationMarkerId(s) === selectedMarkerId)
