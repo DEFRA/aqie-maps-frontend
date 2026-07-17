@@ -412,7 +412,9 @@ describe('#monitoring stations', () => {
     vi.resetModules()
     await import('./map.js')
     mapReadyCallback()
-    const markerIds = mockMapInstance.addMarker.mock.calls.map((call) => call[0])
+    const markerIds = mockMapInstance.addMarker.mock.calls.map(
+      (call) => call[0]
+    )
     expect(markerIds).toEqual(['ms-NORTH', 'ms-SOUTH'])
   })
 

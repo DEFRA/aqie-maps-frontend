@@ -310,7 +310,9 @@ function initMarkerObserver() {
       if (!markerId || markerEl.id === markerId) {
         return
       }
-      const station = sortedStationsByLat.find((s) => stationMarkerId(s) === markerId)
+      const station = sortedStationsByLat.find(
+        (s) => stationMarkerId(s) === markerId
+      )
       if (station) {
         makeMarkerKeyboardAccessible(markerId, station)
       }
@@ -497,7 +499,9 @@ function closeStationPanel() {
     stationPanelElement.classList.remove('visible')
   }
   if (selectedMarkerId) {
-    const prev = sortedStationsByLat.find((s) => stationMarkerId(s) === selectedMarkerId)
+    const prev = sortedStationsByLat.find(
+      (s) => stationMarkerId(s) === selectedMarkerId
+    )
     if (prev) {
       map.addMarker(
         selectedMarkerId,
@@ -520,7 +524,9 @@ function closeStationPanel() {
  */
 function highlightStation(station) {
   if (selectedMarkerId) {
-    const prev = sortedStationsByLat.find((s) => stationMarkerId(s) === selectedMarkerId)
+    const prev = sortedStationsByLat.find(
+      (s) => stationMarkerId(s) === selectedMarkerId
+    )
     if (prev) {
       map.addMarker(
         selectedMarkerId,
