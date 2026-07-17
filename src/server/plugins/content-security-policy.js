@@ -11,7 +11,11 @@ const contentSecurityPolicy = {
     fontSrc: ['self', 'data:'],
     connectSrc: ['self', 'wss', 'data:', 'https://tiles.openfreemap.org'],
     mediaSrc: ['self'],
-    styleSrc: ['self'],
+    styleSrc: [
+      'self',
+      "'sha256-2PZQPqAcY6IE7H879XiZ2Hm3cBUNVB41T1m3kjNvN6E='",
+      "'sha256-2xbtINjVlLJj9ZoLtUvIDOoIknefI75gHwbH8jYZ+6E='"
+    ],
     scriptSrc: [
       'self',
       'blob:',

@@ -1,4 +1,4 @@
-/* global defra, history */
+/* global defra, history, MutationObserver */
 
 import { daqiBand, daqiMarkerOptions } from './map-daqi.js'
 import {
@@ -18,6 +18,13 @@ const ukCentreLat = 52.5619
 const FORECAST_MATCH_RADIUS_DEG = 0.05
 
 const DAY_ABBR = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+// Maximum squared distance (degrees²) for a map click to select a station (~11 km at mid zoom).
+const CLICK_SELECT_MAX_SQUARED_DEG = 0.01
+
+const MAP_KEY_OVERLAY_ID = 'map-key-overlay'
+const keyButtonElement = document.getElementById('key-button')
+const stationPanelElement = document.getElementById('station-panel')
 
 /**
  * Returns today's DAQI value from a forecast entry.
@@ -39,9 +46,6 @@ function todayDaqiValue(forecastEntry) {
     forecastEntry.forecast[0]
   return entry.value
 }
-
-// Maximum squared distance (degrees²) for a map click to select a station (~11 km at mid zoom).
-const CLICK_SELECT_MAX_SQUARED_DEG = 0.01
 
 const map = new defra.InteractiveMap('map', {
   mapProvider: defra.maplibreProvider(),
@@ -93,12 +97,16 @@ function hasValidCoords(station) {
   return true
 }
 
-let stations = []
+let sortedStationsByLat = []
 try {
   const response = await fetch('/api/monitoring-stations')
   if (response.ok) {
     const data = await response.json()
-    stations = data.stations ?? []
+    sortedStationsByLat = (data.stations ?? []).sort((stationA, stationB) => {
+      const latA = Number.parseFloat(stationA.location?.coordinates?.[0]) || 0
+      const latB = Number.parseFloat(stationB.location?.coordinates?.[0]) || 0
+      return latB - latA
+    })
   }
 } catch (err) {
   console.warn('Failed to load monitoring stations', err)
@@ -175,8 +183,6 @@ function stationDaqi(station) {
 // Whether the user manually closed the key overlay (prevents auto-reopen on panel close).
 let keyClosedByUser = false
 
-const MAP_KEY_OVERLAY_ID = 'map-key-overlay'
-
 /**
  * Shows the map key overlay.
  */
@@ -185,6 +191,7 @@ function showKeyOverlay() {
   if (overlay) {
     overlay.hidden = false
   }
+  keyButtonElement?.setAttribute('aria-expanded', 'true')
 }
 
 /**
@@ -196,6 +203,7 @@ function hideKeyOverlay(byUser) {
   if (overlay) {
     overlay.hidden = true
   }
+  keyButtonElement?.setAttribute('aria-expanded', 'false')
   if (byUser) {
     keyClosedByUser = true
   }
@@ -214,7 +222,7 @@ function initKeyOverlay() {
  * Wires up the Key toggle button in the reopen stack.
  */
 function initReopenStack() {
-  document.getElementById('key-button')?.addEventListener('click', () => {
+  keyButtonElement?.addEventListener('click', () => {
     const overlay = document.getElementById(MAP_KEY_OVERLAY_ID)
     if (overlay?.hidden) {
       keyClosedByUser = false
@@ -226,10 +234,115 @@ function initReopenStack() {
 }
 
 /**
+ * Wires up keyboard interaction for the station information panel.
+ * Closes the panel when Escape is pressed.
+ */
+function initStationPanelKeyboard() {
+  stationPanelElement?.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      closeStationPanel()
+    }
+  })
+}
+
+/**
+ * Patches a marker SVG element with the attributes needed for keyboard access.
+ * The Defra InteractiveMap component renders each marker as an
+ * <svg id="map-marker-{id}" role="img"> element with no tabindex, so keyboard
+ * users cannot reach or activate markers without this patch.
+ * Uses a data attribute to skip re-initialisation when the same DOM element
+ * has its SVG content updated by a later addMarker call.
+ * @param {string} markerId - the marker id passed to map.addMarker (e.g. "ms-UKA001")
+ * @param {{ name?: string }} station
+ */
+function makeMarkerKeyboardAccessible(markerId, station) {
+  const el = document.getElementById(`map-marker-${markerId}`)
+  if (!el || el.dataset.keyboardInit) {
+    return
+  }
+  el.setAttribute('tabindex', '0')
+  el.setAttribute('role', 'button')
+  el.setAttribute('aria-label', station.name ?? 'Monitoring station')
+  el.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      highlightStation(station)
+    }
+    if (event.key === 'Escape') {
+      event.preventDefault()
+      const filterPanel = document.getElementById('filter-panel')
+      if (filterPanel && !filterPanel.hidden) {
+        document.getElementById('filter-panel-close')?.focus()
+      } else {
+        document.getElementById('filter-button')?.focus()
+      }
+    }
+  })
+  el.dataset.keyboardInit = 'true'
+}
+
+/**
+ * Watches the marker container for new elements and patches each one via
+ * makeMarkerKeyboardAccessible as soon as it appears.
+ * This is necessary because the Defra InteractiveMap component creates marker
+ * DOM elements asynchronously — calling document.getElementById() immediately
+ * after map.addMarker() would find nothing.
+ * In the test environment, .im-c-viewport__markers does not exist, so we fall
+ * back to observing #map directly.
+ */
+function initMarkerObserver() {
+  const container =
+    document.querySelector('.im-c-viewport__markers') ??
+    document.getElementById('map')
+  if (!container) {
+    return
+  }
+
+  const markerObserver = new MutationObserver((mutations) => {
+    const addedMarkers = mutations.flatMap((mutation) =>
+      Array.from(mutation.addedNodes)
+    )
+    addedMarkers.forEach((markerEl) => {
+      if (markerEl.nodeType !== 1) {
+        return // Node.ELEMENT_NODE
+      }
+      const markerId = markerEl.id?.replace('map-marker-', '')
+      if (!markerId || markerEl.id === markerId) {
+        return
+      }
+      const station = sortedStationsByLat.find(
+        (s) => stationMarkerId(s) === markerId
+      )
+      if (station) {
+        makeMarkerKeyboardAccessible(markerId, station)
+      }
+    })
+  })
+
+  markerObserver.observe(container, { childList: true })
+}
+
+/**
+ * Restores mouse-panning mode when the user initiates a mouse interaction on
+ * the map after keyboard-navigating to a marker.
+ * The Defra InteractiveMap component switches to keyboard mode whenever a
+ * focusable element within it has focus, disabling mouse pan. A single
+ * mousedown listener on the map container blurs any focused marker, which
+ * returns the component to its normal mouse-panning state.
+ */
+function initMapMouseInteraction() {
+  document.getElementById('map')?.addEventListener('mousedown', () => {
+    if (document.activeElement?.dataset.keyboardInit) {
+      document.activeElement.blur()
+    }
+  })
+}
+
+/**
  * (Re)plots all markers that pass the current filter, removing any that no longer match.
  */
 function plotAllMarkers() {
-  stations.forEach((station) => {
+  sortedStationsByLat.forEach((station) => {
     if (!hasValidCoords(station)) {
       return
     }
@@ -251,9 +364,12 @@ function plotAllMarkers() {
 
 // Plot all station markers and initialise map UI on first render.
 map.on('map:firstidle', () => {
-  plotAllMarkers()
   initKeyOverlay()
   initReopenStack()
+  initStationPanelKeyboard()
+  initMarkerObserver()
+  initMapMouseInteraction()
+  plotAllMarkers()
   initFilterPanel(plotAllMarkers)
   document.getElementById('exit-map')?.addEventListener('click', () => {
     history.back()
@@ -341,8 +457,7 @@ function buildPanelRows(station, isClosed) {
  *   openDate?: string, closeDate?: string }} station
  */
 function showStationPanel(station) {
-  const panel = document.getElementById('station-panel')
-  if (!panel) {
+  if (!stationPanelElement?.isConnected) {
     return
   }
 
@@ -367,22 +482,26 @@ function showStationPanel(station) {
     )
     .join('')
 
-  panel.classList.add('visible')
+  panelTrigger = document.activeElement
+  stationPanelElement.classList.add('visible')
   hideKeyOverlay(false)
+  stationPanelElement.focus()
 }
 
 let selectedMarkerId = null
+let panelTrigger = null
 
 /**
  * Restores the previously selected marker to its DAQI colour and hides the station panel.
  */
 function closeStationPanel() {
-  const panel = document.getElementById('station-panel')
-  if (panel) {
-    panel.classList.remove('visible')
+  if (stationPanelElement) {
+    stationPanelElement.classList.remove('visible')
   }
   if (selectedMarkerId) {
-    const prev = stations.find((s) => stationMarkerId(s) === selectedMarkerId)
+    const prev = sortedStationsByLat.find(
+      (s) => stationMarkerId(s) === selectedMarkerId
+    )
     if (prev) {
       map.addMarker(
         selectedMarkerId,
@@ -395,6 +514,8 @@ function closeStationPanel() {
   if (!keyClosedByUser) {
     showKeyOverlay()
   }
+  panelTrigger?.focus()
+  panelTrigger = null
 }
 
 /**
@@ -403,7 +524,9 @@ function closeStationPanel() {
  */
 function highlightStation(station) {
   if (selectedMarkerId) {
-    const prev = stations.find((s) => stationMarkerId(s) === selectedMarkerId)
+    const prev = sortedStationsByLat.find(
+      (s) => stationMarkerId(s) === selectedMarkerId
+    )
     if (prev) {
       map.addMarker(
         selectedMarkerId,
@@ -431,7 +554,7 @@ map.on('map:click', (evt) => {
   const [clickLng, clickLat] = evt.coords
   let best = null
   let bestDist = Infinity
-  stations.forEach((station) => {
+  sortedStationsByLat.forEach((station) => {
     if (!hasValidCoords(station)) {
       return
     }
