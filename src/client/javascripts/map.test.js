@@ -397,6 +397,25 @@ describe('#monitoring stations', () => {
     )
   })
 
+  test('Should add markers in north-to-south order', async () => {
+    const stations = [
+      { localSiteID: 'SOUTH', location: { coordinates: [51.5, -0.1] } },
+      { localSiteID: 'NORTH', location: { coordinates: [57.1, -2.1] } }
+    ]
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({ stations })
+      })
+    )
+    vi.resetModules()
+    await import('./map.js')
+    mapReadyCallback()
+    const markerIds = mockMapInstance.addMarker.mock.calls.map((call) => call[0])
+    expect(markerIds).toEqual(['ms-NORTH', 'ms-SOUTH'])
+  })
+
   test('Should convert [lat, lng] from API to [lng, lat] for the map', async () => {
     const stations = [
       {

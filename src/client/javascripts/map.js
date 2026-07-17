@@ -97,12 +97,16 @@ function hasValidCoords(station) {
   return true
 }
 
-let stations = []
+let sortedStationsByLat = []
 try {
   const response = await fetch('/api/monitoring-stations')
   if (response.ok) {
     const data = await response.json()
-    stations = data.stations ?? []
+    sortedStationsByLat = (data.stations ?? []).sort((stationA, stationB) => {
+      const latA = Number.parseFloat(stationA.location?.coordinates?.[0]) || 0
+      const latB = Number.parseFloat(stationB.location?.coordinates?.[0]) || 0
+      return latB - latA
+    })
   }
 } catch (err) {
   console.warn('Failed to load monitoring stations', err)
@@ -306,7 +310,7 @@ function initMarkerObserver() {
       if (!markerId || markerEl.id === markerId) {
         return
       }
-      const station = stations.find((s) => stationMarkerId(s) === markerId)
+      const station = sortedStationsByLat.find((s) => stationMarkerId(s) === markerId)
       if (station) {
         makeMarkerKeyboardAccessible(markerId, station)
       }
@@ -336,7 +340,7 @@ function initMapMouseInteraction() {
  * (Re)plots all markers that pass the current filter, removing any that no longer match.
  */
 function plotAllMarkers() {
-  stations.forEach((station) => {
+  sortedStationsByLat.forEach((station) => {
     if (!hasValidCoords(station)) {
       return
     }
@@ -493,7 +497,7 @@ function closeStationPanel() {
     stationPanelElement.classList.remove('visible')
   }
   if (selectedMarkerId) {
-    const prev = stations.find((s) => stationMarkerId(s) === selectedMarkerId)
+    const prev = sortedStationsByLat.find((s) => stationMarkerId(s) === selectedMarkerId)
     if (prev) {
       map.addMarker(
         selectedMarkerId,
@@ -516,7 +520,7 @@ function closeStationPanel() {
  */
 function highlightStation(station) {
   if (selectedMarkerId) {
-    const prev = stations.find((s) => stationMarkerId(s) === selectedMarkerId)
+    const prev = sortedStationsByLat.find((s) => stationMarkerId(s) === selectedMarkerId)
     if (prev) {
       map.addMarker(
         selectedMarkerId,
@@ -544,7 +548,7 @@ map.on('map:click', (evt) => {
   const [clickLng, clickLat] = evt.coords
   let best = null
   let bestDist = Infinity
-  stations.forEach((station) => {
+  sortedStationsByLat.forEach((station) => {
     if (!hasValidCoords(station)) {
       return
     }
