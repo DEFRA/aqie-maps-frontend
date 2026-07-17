@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-/* global KeyboardEvent */
+/* global KeyboardEvent, MouseEvent */
 import { vi, beforeEach, afterEach, describe, test, expect } from 'vitest'
 
 const defaultZoom = 5.4842222
@@ -994,6 +994,34 @@ describe('#marker keyboard accessibility', () => {
     ).toBe(true)
   })
 
+  test('Should focus the filter panel close button when Escape is pressed and the panel is open', async () => {
+    await loadWithMarkerDom([station])
+    const filterPanel = document.getElementById('filter-panel')
+    filterPanel.hidden = false
+    const focusSpy = vi.spyOn(
+      document.getElementById('filter-panel-close'),
+      'focus'
+    )
+    document
+      .getElementById('map-marker-ms-UKA001')
+      .dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })
+      )
+    expect(focusSpy).toHaveBeenCalled()
+  })
+
+  test('Should focus the filter button when Escape is pressed and the panel is closed', async () => {
+    await loadWithMarkerDom([station])
+    document.getElementById('filter-panel').hidden = true
+    const focusSpy = vi.spyOn(document.getElementById('filter-button'), 'focus')
+    document
+      .getElementById('map-marker-ms-UKA001')
+      .dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })
+      )
+    expect(focusSpy).toHaveBeenCalled()
+  })
+
   test('Should not throw when neither the marker container nor #map exists in the DOM', async () => {
     resetDom()
     document.getElementById('map').remove()
@@ -1019,6 +1047,17 @@ describe('#marker keyboard accessibility', () => {
     document.getElementById('map').appendChild(nonMarker)
     await Promise.resolve()
     expect(nonMarker.getAttribute('tabindex')).toBeNull()
+  })
+
+  test('Should blur a focused marker on mousedown on the map container', async () => {
+    await loadWithMarkerDom([station])
+    const markerEl = document.getElementById('map-marker-ms-UKA001')
+    markerEl.focus()
+    const blurSpy = vi.spyOn(markerEl, 'blur')
+    document
+      .getElementById('map')
+      .dispatchEvent(new MouseEvent('mousedown', { bubbles: true }))
+    expect(blurSpy).toHaveBeenCalled()
   })
 })
 

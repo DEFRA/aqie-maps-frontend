@@ -262,6 +262,15 @@ function makeMarkerKeyboardAccessible(markerId, station) {
       event.preventDefault()
       highlightStation(station)
     }
+    if (event.key === 'Escape') {
+      event.preventDefault()
+      const filterPanel = document.getElementById('filter-panel')
+      if (filterPanel && !filterPanel.hidden) {
+        document.getElementById('filter-panel-close')?.focus()
+      } else {
+        document.getElementById('filter-button')?.focus()
+      }
+    }
   })
   el.dataset.keyboardInit = 'true'
 }
@@ -306,6 +315,22 @@ function initMarkerObserver() {
 }
 
 /**
+ * Restores mouse-panning mode when the user initiates a mouse interaction on
+ * the map after keyboard-navigating to a marker.
+ * The Defra InteractiveMap component switches to keyboard mode whenever a
+ * focusable element within it has focus, disabling mouse pan. A single
+ * mousedown listener on the map container blurs any focused marker, which
+ * returns the component to its normal mouse-panning state.
+ */
+function initMapMouseInteraction() {
+  document.getElementById('map')?.addEventListener('mousedown', () => {
+    if (document.activeElement?.dataset.keyboardInit) {
+      document.activeElement.blur()
+    }
+  })
+}
+
+/**
  * (Re)plots all markers that pass the current filter, removing any that no longer match.
  */
 function plotAllMarkers() {
@@ -335,6 +360,7 @@ map.on('map:firstidle', () => {
   initReopenStack()
   initStationPanelKeyboard()
   initMarkerObserver()
+  initMapMouseInteraction()
   plotAllMarkers()
   initFilterPanel(plotAllMarkers)
   document.getElementById('exit-map')?.addEventListener('click', () => {

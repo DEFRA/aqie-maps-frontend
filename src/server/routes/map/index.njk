@@ -7,13 +7,13 @@
     {% include "partials/station-list.njk" %}
   </div>
   <div class="app-map-container">
-    <div id="map"></div>
     <button class="aq-map__exit" id="exit-map" type="button">
       <svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 20 20">
         <path d="M4.828,11L12.314,18.485L10.899,19.899L1,10L10.899,0.101L12.314,1.515L4.828,9L19,9L19,11L4.828,11Z"/>
       </svg>
       <span>Exit map</span>
     </button>
+    <div id="map"></div>
     <div id="map-key-overlay" class="aq-map-key" role="region" aria-label="Map key">
       <button id="map-key-close" class="aq-map-key__close" aria-label="Close map key">
         <svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 20 20">
