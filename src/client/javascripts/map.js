@@ -253,7 +253,9 @@ function initStationPanelKeyboard() {
  */
 function makeMarkerKeyboardAccessible(markerId, station) {
   const el = document.getElementById(`map-marker-${markerId}`)
-  if (!el || el.dataset.keyboardInit) return
+  if (!el || el.dataset.keyboardInit) {
+    return
+  }
   el.setAttribute('tabindex', '0')
   el.setAttribute('role', 'button')
   el.setAttribute('aria-label', station.name ?? 'Monitoring station')
