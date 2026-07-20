@@ -6,6 +6,7 @@
 
 Node.js Hapi frontend service for the Air Quality interactive map.
 
+- [Capabilities](#capabilities)
 - [Requirements](#requirements)
   - [Node.js](#nodejs)
   - [Docker](#docker)
@@ -26,6 +27,56 @@ Node.js Hapi frontend service for the Air Quality interactive map.
 - [SonarCloud](#sonarcloud)
 - [Licence](#licence)
   - [About the licence](#about-the-licence)
+
+## Capabilities
+
+The maps frontend is a full-screen, browser-based interactive map that visualises UK air quality monitoring stations and the forecasts associated with them. It is designed to give users a spatial overview of the monitoring network and current pollution levels at a glance.
+
+### Interactive map
+
+The map is centred on the United Kingdom and can be panned and zoomed freely. Each monitoring station is represented by a circular marker pinned to its geographic location. Clicking any marker (or selecting a station from the station list) pans the map to that station and opens a detail panel on the right.
+
+### DAQI colour coding
+
+Markers are colour-coded by the Daily Air Quality Index (DAQI) — the standard 1–10 scale used across the UK monitoring network:
+
+| Band      | DAQI values | Marker colour |
+| --------- | ----------- | ------------- |
+| Low       | 1 – 3       | Green         |
+| Moderate  | 4 – 6       | Yellow        |
+| High      | 7 – 9       | Red           |
+| Very High | 10          | Black         |
+
+Today's DAQI value is derived from the forecast data for the point nearest to each station. Stations whose DAQI cannot be determined (e.g. no nearby forecast point) are shown in grey. A togglable **map key** overlay in the bottom-left corner of the map explains the colour scale at any time.
+
+### Station detail panel
+
+Selecting a station opens a panel that shows:
+
+- **Station name and status** — whether the station is currently Active, Closed, or another recorded status.
+- **Today's DAQI value and band** — the numeric index and its Low / Moderate / High / Very High label.
+- **Pollutants monitored** — a list of the pollutants measured at that station (e.g. NO₂, O₃, SO₂, PM2.5, PM10).
+- **Forecast data** — the DAQI forecast matched to the station's location.
+
+### Pollutant filter panel
+
+A **filter panel** lets you restrict which stations are shown on the map by pollutant type. There are two tabs:
+
+- **DAQI pollutants** — checkboxes for the five primary DAQI pollutants: Fine particulate matter (PM2.5), Particulate matter (PM10), Nitrogen dioxide (NO₂), Ozone (O₃), and Sulphur dioxide (SO₂). All five are selected by default. Unchecking a pollutant hides any station that monitors _only_ that pollutant — stations monitoring at least one still-selected pollutant remain visible.
+- **Other pollutants** — reserved for non-DAQI monitoring networks (not yet available).
+
+### Station list
+
+A collapsible **station list** panel groups every monitoring station by geographic area in alphabetical order. Expanding an area accordion reveals the individual stations within it; clicking a station name navigates directly to it on the map.
+
+The list also supports toggling the display of inactive (closed or retired) stations on and off, so you can choose whether to include historical sites in your view.
+
+### Data sources
+
+The map page pulls live data from two back-end services on page load:
+
+- **`aqie-back-end` — `/api/monitoring-stations`** — provides station metadata including location coordinates, area, status, and the list of pollutants each station measures.
+- **`aqie-forecast-api` — `/api/forecasts`** — provides forecast arrays (daily DAQI values by day abbreviation) for geographic points across the UK. The frontend matches each station to the nearest forecast point within ~5 km to colour its marker.
 
 ## Requirements
 
