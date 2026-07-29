@@ -8,7 +8,11 @@ import {
   pollutantLabels,
   stationStatusTag
 } from './map-utils.js'
-import { stationMatchesFilter, initFilterPanel, filterState } from './map-filter-panel.js'
+import {
+  stationMatchesFilter,
+  initFilterPanel,
+  filterState
+} from './map-filter-panel.js'
 
 const defaultZoom = 5.4842222
 const ukCentreLng = -1.4649
@@ -45,10 +49,6 @@ function daqiValueForDay(forecastEntry, dayAbbr) {
     forecastEntry.forecast.find((f) => f.day === dayAbbr) ??
     forecastEntry.forecast[0]
   return entry.value
-}
-
-function todayDaqiValue(forecastEntry) {
-  return daqiValueForDay(forecastEntry, DAY_ABBR[new Date().getDay()])
 }
 
 const map = new defra.InteractiveMap('map', {
@@ -135,7 +135,7 @@ try {
   const aurnResponse = await fetch('/api/aurn-data')
   if (aurnResponse.ok) {
     const aurnData = await aurnResponse.json()
-    for (const m of (aurnData.measurements ?? [])) {
+    for (const m of aurnData.measurements ?? []) {
       aurnDataByStation.set(m.localSiteID, m.daqiIndex)
     }
   }
@@ -473,7 +473,11 @@ function buildDaqiRow(station) {
   ) {
     return null
   }
-  return ['DAQI (forecast)', buildDaqiTag(daqiValueForDay(forecast, selectedForecastDay)), true]
+  return [
+    'DAQI (forecast)',
+    buildDaqiTag(daqiValueForDay(forecast, selectedForecastDay)),
+    true
+  ]
 }
 
 /**
