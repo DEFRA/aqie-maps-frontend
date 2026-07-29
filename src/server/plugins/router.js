@@ -8,6 +8,7 @@ import { config } from '../../config/config.js'
 import { map } from '../routes/map/index.js'
 import { monitoringStationsApi } from '../routes/api/monitoring-stations/index.js'
 import { forecastsApi } from '../routes/api/forecasts/index.js'
+import { aurnData } from '../routes/api/aurn-data/index.js'
 
 export const router = {
   plugin: {
@@ -24,7 +25,8 @@ export const router = {
         about,
         map,
         monitoringStationsApi,
-        forecastsApi
+        forecastsApi,
+        aurnData
       ])
 
       await server.register([serveMapAssets])
