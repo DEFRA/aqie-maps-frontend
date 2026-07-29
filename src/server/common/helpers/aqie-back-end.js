@@ -1,9 +1,11 @@
 import { request } from 'undici'
 
 import { config } from '../../../config/config.js'
+import { statusCodes } from '../constants/status-codes.js'
 
 const defaultTimeoutMs = 5000
 const monitoringStationInfoTimeoutMs = 120000
+const backendUrl = config.get('aqieBackEnd.url')
 
 function buildUrl(baseUrl, path) {
   return new URL(path, baseUrl).toString()
@@ -21,7 +23,7 @@ async function get(baseUrl, path, timeoutMs = defaultTimeoutMs) {
     bodyTimeout: timeoutMs
   })
 
-  if (statusCode < 200 || statusCode >= 300) {
+  if (statusCode < statusCodes.ok || statusCode >= statusCodes.redirectStart) {
     throw new Error(`${url} responded ${statusCode}`)
   }
 
@@ -29,12 +31,12 @@ async function get(baseUrl, path, timeoutMs = defaultTimeoutMs) {
 }
 
 async function getMonitoringStations() {
-  return get(config.get('aqieBackEnd.url'), '/monitoringStations')
+  return get(backendUrl, '/monitoringStations')
 }
 
 async function getMonitoringStationInfo() {
   return get(
-    config.get('aqieBackEnd.url'),
+    backendUrl,
     '/monitoringStationInfo',
     monitoringStationInfoTimeoutMs
   )
@@ -47,11 +49,11 @@ async function getForecasts() {
     return get(forecastApiUrl, '/forecast')
   }
 
-  return get(config.get('aqieBackEnd.url'), '/forecasts')
+  return get(backendUrl, '/forecasts')
 }
 
 async function getAurnData() {
-  return get(config.get('aqieBackEnd.url'), '/aurnData')
+  return get(backendUrl, '/aurnData')
 }
 
 export {
