@@ -379,6 +379,66 @@ describe('#map initialisation', () => {
   test('Should fetch forecasts on load', () => {
     expect(fetch).toHaveBeenCalledWith('/api/forecasts')
   })
+
+  test('Should fetch AURN data on load', () => {
+    expect(fetch).toHaveBeenCalledWith('/api/aurn-data')
+  })
+
+  test('Should populate aurnDataByStation when AURN data has measurements', async () => {
+    const stations = [
+      { localSiteID: 'UKA00651', location: { coordinates: [51.5, -0.1] } }
+    ]
+    const measurements = [{ localSiteID: 'UKA00651', daqiIndex: 2 }]
+    resetDom()
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation((url) => {
+        if (url === '/api/monitoring-stations') {
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({ stations })
+          })
+        }
+        if (url === '/api/aurn-data') {
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({ measurements })
+          })
+        }
+        return Promise.resolve({ ok: true, json: () => Promise.resolve([]) })
+      })
+    )
+    vi.resetModules()
+    await import('./map.js')
+    mapReadyCallback()
+    // Station should be coloured with AQI 2 (non-grey) from AURN data
+    const call = mockMapInstance.addMarker.mock.calls[0]
+    expect(call[2].symbolSvgContent).toContain('#00703c')
+  })
+
+  test('Should warn and continue when AURN data fetch fails', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    resetDom()
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation((url) => {
+        if (url === '/api/aurn-data') {
+          return Promise.reject(new Error('network error'))
+        }
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ stations: [] })
+        })
+      })
+    )
+    vi.resetModules()
+    await expect(import('./map.js')).resolves.not.toThrow()
+    expect(warnSpy).toHaveBeenCalledWith(
+      'Failed to load AURN data',
+      expect.any(Error)
+    )
+    warnSpy.mockRestore()
+  })
 })
 
 describe('#monitoring stations', () => {
@@ -948,6 +1008,142 @@ async function loadWithMarkerDom(stationList) {
   mapReadyCallback()
   await Promise.resolve()
 }
+
+describe('#AURN mode station panel', () => {
+  const station = {
+    localSiteID: 'UKA00651',
+    name: 'London Bloomsbury',
+    pollutants: ['NO2'],
+    localAuthority: 'Greater London',
+    areaType: 'Urban Background',
+    openDate: '2000-01-15',
+    location: { coordinates: [51.5, -0.1] }
+  }
+
+  test('Should show DAQI (observed) as Not available when station has no AURN data', async () => {
+    // stubFetch returns empty measurements by default — AURN mode, no data for this station
+    await loadStationsAndIdle([station])
+    mapClickCallback({ coords: [-0.1, 51.5] })
+    expect(document.getElementById('sp-details').textContent).toContain(
+      'DAQI (observed)'
+    )
+    expect(document.getElementById('sp-details').textContent).toContain(
+      'Not available'
+    )
+  })
+
+  test('Should show DAQI (observed) tag with correct band when station has AURN data', async () => {
+    const measurements = [{ localSiteID: 'UKA00651', daqiIndex: 2 }]
+    resetDom()
+    stubFetch({ stations: [station], forecasts: [] })
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation((url) => {
+        if (url === '/api/monitoring-stations') {
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({ stations: [station] })
+          })
+        }
+        if (url === '/api/aurn-data') {
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({ measurements })
+          })
+        }
+        return Promise.resolve({ ok: true, json: () => Promise.resolve([]) })
+      })
+    )
+    vi.resetModules()
+    await import('./map.js')
+    mapReadyCallback()
+    mapClickCallback({ coords: [-0.1, 51.5] })
+    expect(document.getElementById('sp-details').textContent).toContain(
+      'DAQI (observed)'
+    )
+    expect(document.getElementById('sp-details').textContent).toContain('2')
+    expect(document.getElementById('sp-details').textContent).toContain('low')
+  })
+})
+
+describe('#forecast day controls', () => {
+  const station = {
+    localSiteID: 'UKA001',
+    location: { coordinates: [51.5, -0.1] }
+  }
+
+  test('Should create a day button for each day in the forecast when in forecast mode', async () => {
+    const forecasts = [
+      {
+        location: { coordinates: [51.5, -0.1] },
+        forecast: [
+          { day: 'Mon', value: 2 },
+          { day: 'Tue', value: 3 }
+        ]
+      }
+    ]
+    resetDom()
+    document.body.insertAdjacentHTML(
+      'beforeend',
+      '<div id="forecast-day-group"></div>'
+    )
+    stubFetch({ stations: [station], forecasts })
+    vi.resetModules()
+    await import('./map.js')
+    const { filterState } = await import('./map-filter-panel.js')
+    filterState.mapMode = 'forecast'
+    mapReadyCallback()
+    const group = document.getElementById('forecast-day-group')
+    expect(group.querySelectorAll('button').length).toBe(2)
+    expect(group.textContent).toContain('Mon')
+    expect(group.textContent).toContain('Tue')
+  })
+
+  test('Should not create day buttons when forecasts array is empty', async () => {
+    resetDom()
+    document.body.insertAdjacentHTML(
+      'beforeend',
+      '<div id="forecast-day-group"></div>'
+    )
+    stubFetch({ stations: [station], forecasts: [] })
+    vi.resetModules()
+    await import('./map.js')
+    mapReadyCallback()
+    const group = document.getElementById('forecast-day-group')
+    expect(group.querySelectorAll('button').length).toBe(0)
+  })
+
+  test('Should update selectedForecastDay and replot markers when a day button is clicked', async () => {
+    const forecasts = [
+      {
+        location: { coordinates: [51.5, -0.1] },
+        forecast: [
+          { day: 'Mon', value: 2 },
+          { day: 'Tue', value: 5 }
+        ]
+      }
+    ]
+    resetDom()
+    document.body.insertAdjacentHTML(
+      'beforeend',
+      '<div id="forecast-day-group"></div>'
+    )
+    stubFetch({ stations: [station], forecasts })
+    vi.resetModules()
+    await import('./map.js')
+    const { filterState } = await import('./map-filter-panel.js')
+    filterState.mapMode = 'forecast'
+    mapReadyCallback()
+    const group = document.getElementById('forecast-day-group')
+    const tuesdayBtn = [...group.querySelectorAll('button')].find(
+      (b) => b.textContent.trim() === 'Tue'
+    )
+    mockMapInstance.addMarker.mockClear()
+    tuesdayBtn.click()
+    expect(mockMapInstance.addMarker).toHaveBeenCalled()
+    expect(tuesdayBtn.getAttribute('aria-pressed')).toBe('true')
+  })
+})
 
 describe('#marker keyboard accessibility', () => {
   const station = {
