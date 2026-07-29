@@ -14,7 +14,7 @@ let mapReadyCallback
 let mapClickCallback
 
 /**
- * Stubs fetch to return separate responses for stations and forecasts endpoints.
+ * Stubs fetch to return separate responses for stations, forecasts and aurn-data endpoints.
  */
 function stubFetch({ stations = [], forecasts = [] } = {}) {
   vi.stubGlobal(
@@ -24,6 +24,12 @@ function stubFetch({ stations = [], forecasts = [] } = {}) {
         return Promise.resolve({
           ok: true,
           json: () => Promise.resolve({ stations })
+        })
+      }
+      if (url === '/api/aurn-data') {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ measurements: [] })
         })
       }
       return Promise.resolve({
@@ -541,6 +547,8 @@ async function loadWithForecasts(stations, forecasts) {
   stubFetch({ stations, forecasts })
   vi.resetModules()
   await import('./map.js')
+  const { filterState } = await import('./map-filter-panel.js')
+  filterState.mapMode = 'forecast'
   mapReadyCallback()
 }
 
@@ -563,6 +571,8 @@ async function loadStationsAndIdleWithForecasts(stationList, forecasts) {
   stubFetch({ stations: stationList, forecasts })
   vi.resetModules()
   await import('./map.js')
+  const { filterState } = await import('./map-filter-panel.js')
+  filterState.mapMode = 'forecast'
   mapReadyCallback()
 }
 

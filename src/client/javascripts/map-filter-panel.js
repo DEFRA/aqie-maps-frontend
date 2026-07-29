@@ -2,6 +2,7 @@ const ARIA_PRESSED = 'aria-pressed'
 
 const filterState = {
   mode: 'daqi',
+  mapMode: 'aurn',
   selected: new Set(['NO2', 'O3', 'SO2', 'PM25', 'PM10'])
 }
 
@@ -89,6 +90,11 @@ function initFilterPanel(onFilterChange) {
   const tabOther = document.getElementById('filter-tab-other')
   const daqiContent = document.getElementById('filter-daqi-content')
   const otherContent = document.getElementById('filter-other-content')
+  const mapTypeAurn = document.getElementById('map-type-aurn')
+  const mapTypeForecast = document.getElementById('map-type-forecast')
+  const pollutantControls = document.getElementById('pollutant-filter-controls')
+  const forecastDayControls = document.getElementById('forecast-day-controls')
+
   document
     .getElementById('filter-panel-close')
     .addEventListener('click', () => closeFilterPanel(panel, reopenBtn))
@@ -99,6 +105,37 @@ function initFilterPanel(onFilterChange) {
       closeFilterPanel(panel, reopenBtn)
     }
   })
+
+  mapTypeAurn?.addEventListener('click', () => {
+    filterState.mapMode = 'aurn'
+    mapTypeAurn.setAttribute(ARIA_PRESSED, 'true')
+    mapTypeForecast?.setAttribute(ARIA_PRESSED, 'false')
+    mapTypeAurn.classList.add('aq-filter-panel__tab--active')
+    mapTypeForecast?.classList.remove('aq-filter-panel__tab--active')
+    if (pollutantControls) {
+      pollutantControls.hidden = false
+    }
+    if (forecastDayControls) {
+      forecastDayControls.hidden = true
+    }
+    onFilterChange()
+  })
+
+  mapTypeForecast?.addEventListener('click', () => {
+    filterState.mapMode = 'forecast'
+    mapTypeForecast.setAttribute(ARIA_PRESSED, 'true')
+    mapTypeAurn?.setAttribute(ARIA_PRESSED, 'false')
+    mapTypeForecast.classList.add('aq-filter-panel__tab--active')
+    mapTypeAurn?.classList.remove('aq-filter-panel__tab--active')
+    if (pollutantControls) {
+      pollutantControls.hidden = true
+    }
+    if (forecastDayControls) {
+      forecastDayControls.hidden = false
+    }
+    onFilterChange()
+  })
+
   tabDaqi.addEventListener('click', () => {
     filterState.mode = 'daqi'
     tabDaqi.setAttribute(ARIA_PRESSED, 'true')

@@ -8,7 +8,7 @@ import {
   pollutantLabels,
   stationStatusTag
 } from './map-utils.js'
-import { stationMatchesFilter, initFilterPanel } from './map-filter-panel.js'
+import { stationMatchesFilter, initFilterPanel, filterState } from './map-filter-panel.js'
 
 const defaultZoom = 5.4842222
 const ukCentreLng = -1.4649
@@ -37,14 +37,18 @@ const stationPanelElement = document.getElementById('station-panel')
  * Falls back to index 0 if no matching day entry is found.
  *
  * @param {{ forecast: Array<{ day: string, value: number }> }} forecastEntry
+ * @param {string} dayAbbr - Three-letter day abbreviation e.g. 'Mon'
  * @returns {number}
  */
-function todayDaqiValue(forecastEntry) {
-  const todayAbbr = DAY_ABBR[new Date().getDay()]
+function daqiValueForDay(forecastEntry, dayAbbr) {
   const entry =
-    forecastEntry.forecast.find((f) => f.day === todayAbbr) ??
+    forecastEntry.forecast.find((f) => f.day === dayAbbr) ??
     forecastEntry.forecast[0]
   return entry.value
+}
+
+function todayDaqiValue(forecastEntry) {
+  return daqiValueForDay(forecastEntry, DAY_ABBR[new Date().getDay()])
 }
 
 const map = new defra.InteractiveMap('map', {
@@ -125,6 +129,23 @@ try {
   console.warn('Failed to load forecasts', err)
 }
 
+/** DAQI index keyed by localSiteID for AURN observed mode. */
+const aurnDataByStation = new Map()
+try {
+  const aurnResponse = await fetch('/api/aurn-data')
+  if (aurnResponse.ok) {
+    const aurnData = await aurnResponse.json()
+    for (const m of (aurnData.measurements ?? [])) {
+      aurnDataByStation.set(m.localSiteID, m.daqiIndex)
+    }
+  }
+} catch (err) {
+  console.warn('Failed to load AURN data', err)
+}
+
+/** The currently selected forecast day abbreviation (e.g. 'Mon'). Defaults to today. */
+let selectedForecastDay = DAY_ABBR[new Date().getDay()]
+
 /**
  * Finds the forecast entry whose location is nearest to the station, within 0.05 degrees.
  * @param {{ location: { coordinates: [number, number] } }} station
@@ -155,8 +176,10 @@ function forecastForStation(station) {
 
 /**
  * Returns today's DAQI value (1–10) for a station, or null if unavailable.
+ * In AURN mode, returns the observed DAQI from the aurnDataByStation map.
+ * In forecast mode, returns the forecast DAQI for the selected day.
  * Closed stations always return null.
- * @param {{ stationStatus?: string, status?: string, siteStatus?: string }} station
+ * @param {{ stationStatus?: string, status?: string, siteStatus?: string, localSiteID?: string }} station
  * @returns {number|null}
  */
 function stationDaqi(station) {
@@ -169,13 +192,16 @@ function stationDaqi(station) {
   if (status === 'closed') {
     return null
   }
+  if (filterState.mapMode === 'aurn') {
+    return aurnDataByStation.get(station.localSiteID) ?? null
+  }
   const forecast = forecastForStation(station)
   if (
     forecast &&
     Array.isArray(forecast.forecast) &&
     forecast.forecast.length > 0
   ) {
-    return todayDaqiValue(forecast)
+    return daqiValueForDay(forecast, selectedForecastDay)
   }
   return null
 }
@@ -339,6 +365,40 @@ function initMapMouseInteraction() {
 }
 
 /**
+ * Populates the forecast day selector buttons from the loaded forecasts data.
+ * The button matching today's day abbreviation is activated by default.
+ * Selecting a day updates selectedForecastDay and re-plots all markers.
+ * @param {Function} onDayChange - called to re-plot markers when the day changes
+ */
+function initForecastDayControls(onDayChange) {
+  const dayGroup = document.getElementById('forecast-day-group')
+  if (!dayGroup || forecasts.length === 0) {
+    return
+  }
+  const days = forecasts[0]?.forecast?.map((f) => f.day) ?? []
+  days.forEach((day) => {
+    const btn = document.createElement('button')
+    const isActive = day === selectedForecastDay
+    btn.className =
+      'aq-filter-panel__tab' + (isActive ? ' aq-filter-panel__tab--active' : '')
+    btn.setAttribute('aria-pressed', String(isActive))
+    btn.setAttribute('data-day', day)
+    btn.innerHTML = `<span>${day}</span>`
+    btn.addEventListener('click', () => {
+      dayGroup.querySelectorAll('button').forEach((b) => {
+        b.setAttribute('aria-pressed', 'false')
+        b.classList.remove('aq-filter-panel__tab--active')
+      })
+      btn.setAttribute('aria-pressed', 'true')
+      btn.classList.add('aq-filter-panel__tab--active')
+      selectedForecastDay = day
+      onDayChange()
+    })
+    dayGroup.appendChild(btn)
+  })
+}
+
+/**
  * (Re)plots all markers that pass the current filter, removing any that no longer match.
  */
 function plotAllMarkers() {
@@ -371,6 +431,7 @@ map.on('map:firstidle', () => {
   initMapMouseInteraction()
   plotAllMarkers()
   initFilterPanel(plotAllMarkers)
+  initForecastDayControls(plotAllMarkers)
   document.getElementById('exit-map')?.addEventListener('click', () => {
     history.back()
   })
@@ -381,7 +442,29 @@ map.on('map:firstidle', () => {
  * @param {object} station
  * @returns {Array|null}
  */
+/**
+ * Builds a DAQI tag span for use in the station panel.
+ * @param {number} daqiValue
+ * @returns {string}
+ */
+function buildDaqiTag(daqiValue) {
+  const band = daqiBand[daqiValue] || ''
+  const bandKey = band.toLowerCase().replaceAll(' ', '')
+  const daqiClass = bandKey
+    ? `aq-daqi-tag aq-daqi-tag--${bandKey}`
+    : 'aq-daqi-tag'
+  const bandSuffix = band ? ` (${band.toLowerCase()})` : ''
+  return `<span class="${daqiClass}">${daqiValue}${bandSuffix}</span>`
+}
+
 function buildDaqiRow(station) {
+  if (filterState.mapMode === 'aurn') {
+    const aurnDaqi = aurnDataByStation.get(station.localSiteID)
+    if (aurnDaqi == null) {
+      return ['DAQI (observed)', NOT_AVAILABLE]
+    }
+    return ['DAQI (observed)', buildDaqiTag(aurnDaqi), true]
+  }
   const forecast = forecastForStation(station)
   if (
     !forecast ||
@@ -390,18 +473,7 @@ function buildDaqiRow(station) {
   ) {
     return null
   }
-  const todayValue = todayDaqiValue(forecast)
-  const band = daqiBand[todayValue] || ''
-  const bandKey = band.toLowerCase().replaceAll(' ', '')
-  const daqiClass = bandKey
-    ? `aq-daqi-tag aq-daqi-tag--${bandKey}`
-    : 'aq-daqi-tag'
-  const bandSuffix = band ? ` (${band.toLowerCase()})` : ''
-  return [
-    'DAQI',
-    `<span class="${daqiClass}">${todayValue}${bandSuffix}</span>`,
-    true
-  ]
+  return ['DAQI (forecast)', buildDaqiTag(daqiValueForDay(forecast, selectedForecastDay)), true]
 }
 
 /**
