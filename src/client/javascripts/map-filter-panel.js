@@ -94,7 +94,13 @@ function initPanelOpenClose(panel, reopenBtn) {
 /**
  * Wires up the Monitoring stations / Forecast map type toggle.
  */
-function initMapTypeToggle(mapTypeAurn, mapTypeForecast, pollutantControls, forecastDayControls, onFilterChange) {
+function initMapTypeToggle(
+  mapTypeAurn,
+  mapTypeForecast,
+  pollutantControls,
+  forecastDayControls,
+  onFilterChange
+) {
   mapTypeAurn?.addEventListener('click', () => {
     filterState.mapMode = 'aurn'
     mapTypeAurn.setAttribute(ARIA_PRESSED, 'true')
@@ -129,7 +135,13 @@ function initMapTypeToggle(mapTypeAurn, mapTypeForecast, pollutantControls, fore
 /**
  * Wires up the DAQI pollutants / Other pollutants tab pair.
  */
-function initPollutantTabs(tabDaqi, tabOther, daqiContent, otherContent, onFilterChange) {
+function initPollutantTabs(
+  tabDaqi,
+  tabOther,
+  daqiContent,
+  otherContent,
+  onFilterChange
+) {
   tabDaqi.addEventListener('click', () => {
     filterState.mode = 'daqi'
     tabDaqi.setAttribute(ARIA_PRESSED, 'true')
