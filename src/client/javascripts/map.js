@@ -18,6 +18,9 @@ const defaultZoom = 5.4842222
 const ukCentreLng = -1.4649
 const ukCentreLat = 52.5619
 
+const ARIA_PRESSED = 'aria-pressed'
+const TAB_ACTIVE_CLASS = 'aq-filter-panel__tab--active'
+
 // Maximum distance (degrees) between a station and a forecast point to be considered a match.
 const FORECAST_MATCH_RADIUS_DEG = 0.05
 
@@ -380,17 +383,17 @@ function initForecastDayControls(onDayChange) {
     const btn = document.createElement('button')
     const isActive = day === selectedForecastDay
     btn.className =
-      'aq-filter-panel__tab' + (isActive ? ' aq-filter-panel__tab--active' : '')
-    btn.setAttribute('aria-pressed', String(isActive))
-    btn.setAttribute('data-day', day)
+      'aq-filter-panel__tab' + (isActive ? ` ${TAB_ACTIVE_CLASS}` : '')
+    btn.setAttribute(ARIA_PRESSED, String(isActive))
+    btn.dataset.day = day
     btn.innerHTML = `<span>${day}</span>`
     btn.addEventListener('click', () => {
       dayGroup.querySelectorAll('button').forEach((b) => {
-        b.setAttribute('aria-pressed', 'false')
-        b.classList.remove('aq-filter-panel__tab--active')
+        b.setAttribute(ARIA_PRESSED, 'false')
+        b.classList.remove(TAB_ACTIVE_CLASS)
       })
-      btn.setAttribute('aria-pressed', 'true')
-      btn.classList.add('aq-filter-panel__tab--active')
+      btn.setAttribute(ARIA_PRESSED, 'true')
+      btn.classList.add(TAB_ACTIVE_CLASS)
       selectedForecastDay = day
       onDayChange()
     })

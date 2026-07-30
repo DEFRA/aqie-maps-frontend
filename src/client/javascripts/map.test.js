@@ -1094,7 +1094,7 @@ describe('#forecast day controls', () => {
     filterState.mapMode = 'forecast'
     mapReadyCallback()
     const group = document.getElementById('forecast-day-group')
-    expect(group.querySelectorAll('button').length).toBe(2)
+    expect(group.querySelectorAll('button')).toHaveLength(2)
     expect(group.textContent).toContain('Mon')
     expect(group.textContent).toContain('Tue')
   })
@@ -1110,7 +1110,7 @@ describe('#forecast day controls', () => {
     await import('./map.js')
     mapReadyCallback()
     const group = document.getElementById('forecast-day-group')
-    expect(group.querySelectorAll('button').length).toBe(0)
+    expect(group.querySelectorAll('button')).toHaveLength(0)
   })
 
   test('Should update selectedForecastDay and replot markers when a day button is clicked', async () => {
