@@ -57,16 +57,16 @@ function resetDom() {
         <div id="map-key-body">
           <div class="aq-daqi-scale">
             <div class="aq-daqi-scale__bands">
-              <div class="aq-daqi-scale__band aq-daqi-scale__band--green">1</div>
-              <div class="aq-daqi-scale__band aq-daqi-scale__band--green">2</div>
-              <div class="aq-daqi-scale__band aq-daqi-scale__band--green">3</div>
-              <div class="aq-daqi-scale__band aq-daqi-scale__band--yellow">4</div>
-              <div class="aq-daqi-scale__band aq-daqi-scale__band--yellow">5</div>
-              <div class="aq-daqi-scale__band aq-daqi-scale__band--yellow">6</div>
-              <div class="aq-daqi-scale__band aq-daqi-scale__band--red">7</div>
-              <div class="aq-daqi-scale__band aq-daqi-scale__band--red">8</div>
-              <div class="aq-daqi-scale__band aq-daqi-scale__band--red">9</div>
-              <div class="aq-daqi-scale__band aq-daqi-scale__band--black">10</div>
+              <div class="aq-daqi-scale__band aq-daqi-scale__band--1">1</div>
+              <div class="aq-daqi-scale__band aq-daqi-scale__band--1">2</div>
+              <div class="aq-daqi-scale__band aq-daqi-scale__band--1">3</div>
+              <div class="aq-daqi-scale__band aq-daqi-scale__band--4">4</div>
+              <div class="aq-daqi-scale__band aq-daqi-scale__band--4">5</div>
+              <div class="aq-daqi-scale__band aq-daqi-scale__band--4">6</div>
+              <div class="aq-daqi-scale__band aq-daqi-scale__band--7">7</div>
+              <div class="aq-daqi-scale__band aq-daqi-scale__band--7">8</div>
+              <div class="aq-daqi-scale__band aq-daqi-scale__band--7">9</div>
+              <div class="aq-daqi-scale__band aq-daqi-scale__band--10">10</div>
             </div>
             <div class="aq-daqi-scale__labels">
               <div class="aq-daqi-scale__label-group aq-daqi-scale__label-group--low">
@@ -189,16 +189,16 @@ beforeEach(async () => {
         <div id="map-key-body">
           <div class="aq-daqi-scale">
             <div class="aq-daqi-scale__bands">
-              <div class="aq-daqi-scale__band aq-daqi-scale__band--green">1</div>
-              <div class="aq-daqi-scale__band aq-daqi-scale__band--green">2</div>
-              <div class="aq-daqi-scale__band aq-daqi-scale__band--green">3</div>
-              <div class="aq-daqi-scale__band aq-daqi-scale__band--yellow">4</div>
-              <div class="aq-daqi-scale__band aq-daqi-scale__band--yellow">5</div>
-              <div class="aq-daqi-scale__band aq-daqi-scale__band--yellow">6</div>
-              <div class="aq-daqi-scale__band aq-daqi-scale__band--red">7</div>
-              <div class="aq-daqi-scale__band aq-daqi-scale__band--red">8</div>
-              <div class="aq-daqi-scale__band aq-daqi-scale__band--red">9</div>
-              <div class="aq-daqi-scale__band aq-daqi-scale__band--black">10</div>
+              <div class="aq-daqi-scale__band aq-daqi-scale__band--1">1</div>
+              <div class="aq-daqi-scale__band aq-daqi-scale__band--1">2</div>
+              <div class="aq-daqi-scale__band aq-daqi-scale__band--1">3</div>
+              <div class="aq-daqi-scale__band aq-daqi-scale__band--4">4</div>
+              <div class="aq-daqi-scale__band aq-daqi-scale__band--4">5</div>
+              <div class="aq-daqi-scale__band aq-daqi-scale__band--4">6</div>
+              <div class="aq-daqi-scale__band aq-daqi-scale__band--7">7</div>
+              <div class="aq-daqi-scale__band aq-daqi-scale__band--7">8</div>
+              <div class="aq-daqi-scale__band aq-daqi-scale__band--7">9</div>
+              <div class="aq-daqi-scale__band aq-daqi-scale__band--10">10</div>
             </div>
             <div class="aq-daqi-scale__labels">
               <div class="aq-daqi-scale__label-group aq-daqi-scale__label-group--low">
@@ -411,9 +411,9 @@ describe('#map initialisation', () => {
     vi.resetModules()
     await import('./map.js')
     mapReadyCallback()
-    // Station should be coloured with AQI 2 (non-grey) from AURN data
+    // Station should be coloured with DAQI 2 (non-grey) from AURN data
     const call = mockMapInstance.addMarker.mock.calls[0]
-    expect(call[2].symbolSvgContent).toContain('#00703c')
+    expect(call[2].symbolSvgContent).toContain('#31ff00')
   })
 
   test('Should warn and continue when AURN data fetch fails', async () => {
@@ -646,10 +646,10 @@ describe('#DAQI markers', () => {
   ]
 
   test.each([
-    ['1–3', 2, '#00703c', 'fill="#ffffff"'],
-    ['4–6', 5, '#ffdd00', 'fill="#0b0c0c"'],
-    ['7–9', 8, '#d4351c', 'fill="#ffffff"'],
-    ['10', 10, '#0b0c0c', 'fill="#ffffff"']
+    ['1–3', 2, '#31ff00', 'fill="#0b0c0c"'],
+    ['4–6', 5, '#ffcf00', 'fill="#0b0c0c"'],
+    ['7–9', 8, '#ff0000', 'fill="#ffffff"'],
+    ['10', 10, '#ce30ff', 'fill="#ffffff"']
   ])(
     'Should colour marker for DAQI %s',
     async (_, daqiValue, backgroundColour, textColour) => {
@@ -693,7 +693,7 @@ describe('#DAQI markers', () => {
     const call = mockMapInstance.addMarker.mock.calls[0]
     // Closed → DAQI null → grey, no DAQI label
     expect(call[2].symbolSvgContent).toContain('fill="#777777"')
-    expect(call[2].symbolSvgContent).not.toContain('#ffdd00')
+    expect(call[2].symbolSvgContent).not.toContain('#ffcf00')
   })
 
   test('Should skip forecast entry with no coordinates and still match the next', async () => {
@@ -703,7 +703,7 @@ describe('#DAQI markers', () => {
     ]
     await loadWithForecasts([station], forecastWithMissingCoords)
     const call = mockMapInstance.addMarker.mock.calls[0]
-    expect(call[2].symbolSvgContent).toContain('#ffdd00')
+    expect(call[2].symbolSvgContent).toContain('#ffff00')
     expect(call[2].symbolSvgContent).toContain('>4<')
   })
 })
