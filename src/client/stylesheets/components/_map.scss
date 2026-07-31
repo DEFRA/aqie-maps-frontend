@@ -167,16 +167,52 @@
   color: #ffffff;
 
   // Official Defra DAQI colours — source: https://uk-air.defra.gov.uk/air-pollution/daqi?view=more-info
-  &--1  { background-color: #9cff9c; color: #0b0c0c; }
-  &--2  { background-color: #31ff00; color: #0b0c0c; }
-  &--3  { background-color: #31cf00; color: #0b0c0c; }
-  &--4  { background-color: #ffff00; color: #0b0c0c; }
-  &--5  { background-color: #ffcf00; color: #0b0c0c; }
-  &--6  { background-color: #ff9a00; color: #0b0c0c; }
-  &--7  { background-color: #ff9292; color: #0b0c0c; }
-  &--8  { background-color: #ff0000; }
-  &--9  { background-color: #990000; }
-  &--10 { background-color: #ce30ff; }
+  &--1 {
+    background-color: #9cff9c;
+    color: #0b0c0c;
+  }
+
+  &--2 {
+    background-color: #31ff00;
+    color: #0b0c0c;
+  }
+
+  &--3 {
+    background-color: #31cf00;
+    color: #0b0c0c;
+  }
+
+  &--4 {
+    background-color: #ffff00;
+    color: #0b0c0c;
+  }
+
+  &--5 {
+    background-color: #ffcf00;
+    color: #0b0c0c;
+  }
+
+  &--6 {
+    background-color: #ff9a00;
+    color: #0b0c0c;
+  }
+
+  &--7 {
+    background-color: #ff9292;
+    color: #0b0c0c;
+  }
+
+  &--8 {
+    background-color: #ff0000;
+  }
+
+  &--9 {
+    background-color: #990000;
+  }
+
+  &--10 {
+    background-color: #ce30ff;
+  }
 }
 
 .aq-daqi-scale__labels {
