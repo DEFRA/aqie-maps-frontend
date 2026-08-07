@@ -9,7 +9,14 @@ const contentSecurityPolicy = {
   options: {
     defaultSrc: ['self'],
     fontSrc: ['self', 'data:'],
-    connectSrc: ['self', 'wss', 'data:', 'https://tiles.openfreemap.org', 'https://www.googletagmanager.com', 'https://www.google-analytics.com'],
+    connectSrc: [
+      'self',
+      'wss',
+      'data:',
+      'https://tiles.openfreemap.org',
+      'https://www.googletagmanager.com',
+      'https://www.google-analytics.com'
+    ],
     mediaSrc: ['self'],
     styleSrc: [
       'self',
