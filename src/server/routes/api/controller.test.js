@@ -92,6 +92,20 @@ describe('#apiController', () => {
     })
   })
 
+  test('Should return 500 for GET /api/monitoring-station-info when upstream request fails', async () => {
+    mockGetMonitoringStationInfo.mockRejectedValue(new Error('upstream failed'))
+
+    const { result, statusCode } = await server.inject({
+      method: 'GET',
+      url: '/api/monitoring-station-info'
+    })
+
+    expect(statusCode).toBe(statusCodes.internalServerError)
+    expect(result).toEqual({
+      message: 'Failed to fetch data from upstream API'
+    })
+  })
+
   test('Should return AURN measurements payload for GET /api/aurn-data', async () => {
     const payload = {
       message: 'AURN measurements (211 stations)',
