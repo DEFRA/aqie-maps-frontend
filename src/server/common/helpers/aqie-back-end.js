@@ -42,23 +42,8 @@ async function getMonitoringStationInfo() {
   )
 }
 
-async function getForecasts() {
-  const forecastApiUrl = config.get('aqieForecastApi.url')
-
-  if (forecastApiUrl) {
-    return get(forecastApiUrl, '/forecast')
-  }
-
-  return get(backendUrl, '/forecasts')
-}
-
 async function getAurnData() {
   return get(backendUrl, '/aurnData')
 }
 
-export {
-  getForecasts,
-  getMonitoringStationInfo,
-  getMonitoringStations,
-  getAurnData
-}
+export { getMonitoringStationInfo, getMonitoringStations, getAurnData }

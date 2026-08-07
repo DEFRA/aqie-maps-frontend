@@ -74,44 +74,6 @@ describe('#aqieBackEndHelper', () => {
     )
   })
 
-  test('Should use forecast API when AQIE_FORECAST_API_URL is configured', async () => {
-    const payload = { message: 'success', forecasts: [] }
-    mockConfigGet.mockImplementation((key) => {
-      if (key === 'aqieBackEnd.url') {
-        return 'http://localhost:3001'
-      }
-
-      if (key === 'aqieForecastApi.url') {
-        return 'http://localhost:3002'
-      }
-
-      return null
-    })
-    mockOkResponse(payload)
-
-    const { getForecasts } = await import('./aqie-back-end.js')
-    const result = await getForecasts()
-
-    expect(mockRequest).toHaveBeenCalledWith(
-      'http://localhost:3002/forecast',
-      expect.objectContaining({ method: 'GET' })
-    )
-    expect(result).toEqual(payload)
-  })
-
-  test('Should fall back to aqie-back-end forecasts endpoint when forecast API URL is missing', async () => {
-    const payload = { message: 'success', forecasts: [] }
-    mockOkResponse(payload)
-
-    const { getForecasts } = await import('./aqie-back-end.js')
-    await getForecasts()
-
-    expect(mockRequest).toHaveBeenCalledWith(
-      'http://localhost:3001/forecasts',
-      expect.objectContaining({ method: 'GET' })
-    )
-  })
-
   test('Should throw when upstream returns non-2xx response', async () => {
     mockRequest.mockResolvedValueOnce({
       statusCode: 500,
