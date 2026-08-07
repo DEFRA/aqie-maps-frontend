@@ -6,6 +6,7 @@ import { health } from '../routes/health/index.js'
 import { serveStaticFiles, serveMapAssets } from './serve-static-files.js'
 import { config } from '../../config/config.js'
 import { map } from '../routes/map/index.js'
+import { cookies } from '../routes/cookies/index.js'
 import { monitoringStationsApi } from '../routes/api/monitoring-stations/index.js'
 import { forecastsApi } from '../routes/api/forecasts/index.js'
 
@@ -23,6 +24,7 @@ export const router = {
         home,
         about,
         map,
+        cookies,
         monitoringStationsApi,
         forecastsApi
       ])

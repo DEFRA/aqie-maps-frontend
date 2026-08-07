@@ -8,7 +8,9 @@
 {% endblock %}
 
 {% block skipLink %}{% endblock %}
-{% block header %}{% endblock %}
+{% block header %}
+  {% include 'partials/cookie-banner.njk' %}
+{% endblock %}
 {% block content %}{% endblock %}
 {% block footer %}{% endblock %}
 
@@ -17,4 +19,5 @@
   <script src="/map-assets/providers/maplibre/dist/umd/index.js"></script>
   <script src="{{ getAssetPath('src/client/javascripts/station-list.js') }}" type="module"></script>
   <script src="{{ getAssetPath('src/client/javascripts/map.js') }}" type="module"></script>
+  <script src="{{ getAssetPath('src/client/javascripts/application.js') }}" type="module"></script>
 {% endblock %}

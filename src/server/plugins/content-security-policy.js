@@ -9,7 +9,7 @@ const contentSecurityPolicy = {
   options: {
     defaultSrc: ['self'],
     fontSrc: ['self', 'data:'],
-    connectSrc: ['self', 'wss', 'data:', 'https://tiles.openfreemap.org'],
+    connectSrc: ['self', 'wss', 'data:', 'https://tiles.openfreemap.org', 'https://www.googletagmanager.com', 'https://www.google-analytics.com'],
     mediaSrc: ['self'],
     styleSrc: [
       'self',
@@ -19,7 +19,10 @@ const contentSecurityPolicy = {
     scriptSrc: [
       'self',
       'blob:',
-      "'sha256-GUQ5ad8JK5KmEWmROf3LZd9ge94daqNvd8xy9YS1iDw='"
+      "'sha256-GUQ5ad8JK5KmEWmROf3LZd9ge94daqNvd8xy9YS1iDw='",
+      // hash of the inline script in cookie-banner.njk
+      "'sha256-MccLXkkSj1GoQ1ughUqszJA+RuDnMT/qtDj5qY8cZPI='",
+      'https://www.googletagmanager.com'
     ],
     workerSrc: ['self', 'blob:'],
     imgSrc: ['self', 'data:', 'https://tiles.openfreemap.org'],
