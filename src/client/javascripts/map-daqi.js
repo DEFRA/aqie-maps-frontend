@@ -1,18 +1,29 @@
-// DAQI background colours indexed by DAQI value (1–10); index 0 is unused.
-// Yellow (#ffdd00) values 4–6 need dark text.
+// Official Defra DAQI colours indexed by value (1–10); index 0 is unused.
+// Source: https://uk-air.defra.gov.uk/air-pollution/daqi?view=more-info
 const daqiBg = [
   null,
-  '#00703c',
-  '#00703c',
-  '#00703c',
-  '#ffdd00',
-  '#ffdd00',
-  '#ffdd00',
-  '#d4351c',
-  '#d4351c',
-  '#d4351c',
-  '#0b0c0c'
+  '#9cff9c',
+  '#31ff00',
+  '#31cf00',
+  '#ffff00',
+  '#ffcf00',
+  '#ff9a00',
+  '#ff9292',
+  '#ff0000',
+  '#990000',
+  '#ce30ff'
 ]
+
+// Colours light enough to require dark text on the marker label.
+const DAQI_LIGHT_BG = new Set([
+  '#9cff9c',
+  '#31ff00',
+  '#31cf00',
+  '#ffff00',
+  '#ffcf00',
+  '#ff9a00',
+  '#ff9292'
+])
 
 const daqiBand = [
   null,
@@ -47,7 +58,7 @@ function daqiMarkerOptions(daqiValue, selected) {
   const strokeAttr = selected
     ? 'stroke="#0b0c0c" stroke-width="2"'
     : 'stroke="white" stroke-width="2"'
-  const textFill = bg === '#ffdd00' ? '#0b0c0c' : '#ffffff'
+  const textFill = DAQI_LIGHT_BG.has(bg) ? '#0b0c0c' : '#ffffff'
   const label = daqiValue
     ? `<text x="19" y="24" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" font-weight="bold" fill="${textFill}">${daqiValue}</text>`
     : ''
