@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 
-const mockGet = vi.fn()
+const mockRequest = vi.fn()
 
-vi.mock('./http-client.js', () => ({
-  getJson: mockGet
+vi.mock('undici', () => ({
+  request: mockRequest
 }))
 
 const mockConfigGet = vi.fn()
@@ -14,8 +14,16 @@ vi.mock('../../../config/config.js', () => ({
   }
 }))
 
+const mockJson = vi.fn()
+
 function mockOkResponse(payload) {
-  mockGet.mockResolvedValueOnce(payload)
+  mockJson.mockResolvedValueOnce(payload)
+  mockRequest.mockResolvedValueOnce({
+    statusCode: 200,
+    body: {
+      json: mockJson
+    }
+  })
 }
 
 describe('#aqieBackEndHelper', () => {
@@ -25,6 +33,10 @@ describe('#aqieBackEndHelper', () => {
     mockConfigGet.mockImplementation((key) => {
       if (key === 'aqieBackEnd.url') {
         return 'http://localhost:3001'
+      }
+
+      if (key === 'aqieForecastApi.url') {
+        return null
       }
 
       return null
@@ -38,9 +50,9 @@ describe('#aqieBackEndHelper', () => {
     const { getMonitoringStations } = await import('./aqie-back-end.js')
     const result = await getMonitoringStations()
 
-    expect(mockGet).toHaveBeenCalledWith(
-      'http://localhost:3001',
-      '/monitoringStations'
+    expect(mockRequest).toHaveBeenCalledWith(
+      'http://localhost:3001/monitoringStations',
+      expect.objectContaining({ method: 'GET' })
     )
     expect(result).toEqual(payload)
   })
@@ -52,22 +64,45 @@ describe('#aqieBackEndHelper', () => {
     const { getMonitoringStationInfo } = await import('./aqie-back-end.js')
     await getMonitoringStationInfo()
 
-    expect(mockGet).toHaveBeenCalledWith(
-      'http://localhost:3001',
-      '/monitoringStationInfo',
-      120000
+    expect(mockRequest).toHaveBeenCalledWith(
+      'http://localhost:3001/monitoringStationInfo',
+      expect.objectContaining({
+        method: 'GET',
+        headersTimeout: 120000,
+        bodyTimeout: 120000
+      })
     )
   })
 
   test('Should throw when upstream returns non-2xx response', async () => {
-    mockGet.mockRejectedValueOnce(
-      new Error('http://localhost:3001/monitoringStations responded 500')
-    )
+    mockRequest.mockResolvedValueOnce({
+      statusCode: 500,
+      body: {
+        json: mockJson
+      }
+    })
 
     const { getMonitoringStations } = await import('./aqie-back-end.js')
 
     await expect(getMonitoringStations()).rejects.toThrow(
       'http://localhost:3001/monitoringStations responded 500'
     )
+  })
+
+  test('Should fetch AURN data from aqie-back-end', async () => {
+    const payload = {
+      message: 'AURN measurements (211 stations)',
+      measurements: []
+    }
+    mockOkResponse(payload)
+
+    const { getAurnData } = await import('./aqie-back-end.js')
+    const result = await getAurnData()
+
+    expect(mockRequest).toHaveBeenCalledWith(
+      'http://localhost:3001/aurnData',
+      expect.objectContaining({ method: 'GET' })
+    )
+    expect(result).toEqual(payload)
   })
 })

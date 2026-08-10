@@ -1,19 +1,49 @@
-import { getJson } from './http-client.js'
+import { request } from 'undici'
 
 import { config } from '../../../config/config.js'
+import { statusCodes } from '../constants/status-codes.js'
 
+const defaultTimeoutMs = 5000
 const monitoringStationInfoTimeoutMs = 120000
+const backendUrl = config.get('aqieBackEnd.url')
+
+function buildUrl(baseUrl, path) {
+  return new URL(path, baseUrl).toString()
+}
+
+async function get(baseUrl, path, timeoutMs = defaultTimeoutMs) {
+  if (!baseUrl) {
+    throw new Error(`Missing base URL for ${path}`)
+  }
+
+  const url = buildUrl(baseUrl, path)
+  const { statusCode, body } = await request(url, {
+    method: 'GET',
+    headersTimeout: timeoutMs,
+    bodyTimeout: timeoutMs
+  })
+
+  if (statusCode < statusCodes.ok || statusCode >= statusCodes.redirectStart) {
+    throw new Error(`${url} responded ${statusCode}`)
+  }
+
+  return body.json()
+}
 
 async function getMonitoringStations() {
-  return getJson(config.get('aqieBackEnd.url'), '/monitoringStations')
+  return get(backendUrl, '/monitoringStations')
 }
 
 async function getMonitoringStationInfo() {
-  return getJson(
-    config.get('aqieBackEnd.url'),
+  return get(
+    backendUrl,
     '/monitoringStationInfo',
     monitoringStationInfoTimeoutMs
   )
 }
 
-export { getMonitoringStationInfo, getMonitoringStations }
+async function getAurnData() {
+  return get(backendUrl, '/aurnData')
+}
+
+export { getMonitoringStationInfo, getMonitoringStations, getAurnData }
