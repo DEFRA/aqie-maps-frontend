@@ -7,14 +7,14 @@ import {
   Radios,
   SkipLink
 } from 'govuk-frontend'
-import { CookieBanner } from './cookie-banner.mjs'
-import { CookiesPage } from './cookies-page.mjs'
-import { loadAnalytics } from './load-analytics.mjs'
+import { initCookieBanner } from './cookie-banner.js'
+import { initCookiesPage } from './cookies-page.js'
+import { loadAnalytics } from './load-analytics.js'
 import {
   getConsentCookie,
   isValidConsentCookie,
   removeUACookies
-} from './cookie-functions.mjs'
+} from './cookie-functions.js'
 
 const COOKIE_BANNER_SELECTOR = '[data-module="govuk-cookie-banner"]'
 const COOKIES_PAGE_SELECTOR = '[data-module="app-cookies-page"]'
@@ -28,7 +28,7 @@ createAll(SkipLink)
 
 const $cookieBanner = document.querySelector(COOKIE_BANNER_SELECTOR)
 if ($cookieBanner) {
-  new CookieBanner($cookieBanner) // eslint-disable-line no-new
+  initCookieBanner($cookieBanner)
 }
 
 const userConsent = getConsentCookie() || { analytics: false }
@@ -39,5 +39,5 @@ if (userConsent && isValidConsentCookie(userConsent) && userConsent.analytics) {
 
 const $cookiesPage = document.querySelector(COOKIES_PAGE_SELECTOR)
 if ($cookiesPage) {
-  new CookiesPage($cookiesPage) // eslint-disable-line no-new
+  initCookiesPage($cookiesPage)
 }

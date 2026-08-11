@@ -1,114 +1,103 @@
-import { getConsentCookie, setConsentCookie } from './cookie-functions.mjs'
+/* global HTMLElement, HTMLFormElement, HTMLButtonElement, HTMLInputElement */
+import { getConsentCookie, setConsentCookie } from './cookie-functions.js'
 
-export class CookiesPage {
-  constructor($module) {
-    this.isValid = false
-
-    if (
-      !($module instanceof HTMLElement) ||
-      !document.body.classList.contains('govuk-frontend-supported')
-    ) {
-      return
-    }
-
-    this.$page = $module
-
-    const $cookieForm = this.$page.querySelector('.js-cookies-page-form')
-    if (!($cookieForm instanceof HTMLFormElement)) {
-      return
-    }
-
-    this.$cookieForm = $cookieForm
-
-    const $cookieFormFieldsets = this.$cookieForm.querySelectorAll(
-      '.js-cookies-page-form-fieldset'
-    )
-    const $cookieFormButton = this.$cookieForm.querySelector(
-      '.js-cookies-form-button'
-    )
-
-    if (
-      !$cookieFormFieldsets.length ||
-      !($cookieFormButton instanceof HTMLButtonElement)
-    ) {
-      return
-    }
-
-    this.$cookieFormFieldsets = $cookieFormFieldsets
-    this.$cookieFormButton = $cookieFormButton
-
-    const $successNotification = this.$page.querySelector('.js-cookies-page-success')
-    if ($successNotification instanceof HTMLElement) {
-      this.$successNotification = $successNotification
-    }
-
-    const cookieConsent = getConsentCookie()
-
-    this.$cookieFormFieldsets.forEach(($fieldset) => {
-      this.showUserPreference($fieldset, cookieConsent)
-      $fieldset.removeAttribute('hidden')
-    })
-
-    this.$cookieFormButton.removeAttribute('hidden')
-
-    this.$cookieForm.addEventListener('submit', (event) => this.savePreferences(event))
-
-    this.isValid = true
+/**
+ * Wires up the cookie preferences form: pre-fills the current consent,
+ * reveals the form/button and saves preferences on submit.
+ * @param {Element} $module
+ */
+function initCookiesPage($module) {
+  if (
+    !($module instanceof HTMLElement) ||
+    !document.body.classList.contains('govuk-frontend-supported')
+  ) {
+    return
   }
 
-  savePreferences(event) {
-    event.preventDefault()
-
-    const preferences = {}
-
-    this.$cookieFormFieldsets.forEach(($fieldset) => {
-      const cookieType = this.getCookieType($fieldset)
-      if (!cookieType) {
-        return
-      }
-      const $selectedItem = $fieldset.querySelector(
-        `input[name="cookies[${cookieType}]"]:checked`
-      )
-      if ($selectedItem instanceof HTMLInputElement) {
-        preferences[cookieType] = $selectedItem.value === 'yes'
-      }
-    })
-
-    setConsentCookie(preferences)
-    this.showSuccessNotification()
+  const $cookieForm = $module.querySelector('.js-cookies-page-form')
+  if (!($cookieForm instanceof HTMLFormElement)) {
+    return
   }
 
-  showUserPreference($fieldset, preferences) {
-    const cookieType = this.getCookieType($fieldset)
+  const $cookieFormFieldsets = $cookieForm.querySelectorAll(
+    '.js-cookies-page-form-fieldset'
+  )
+  const $cookieFormButton = $cookieForm.querySelector('.js-cookies-form-button')
+
+  if (
+    !$cookieFormFieldsets.length ||
+    !($cookieFormButton instanceof HTMLButtonElement)
+  ) {
+    return
+  }
+
+  const $successNotification = $module.querySelector('.js-cookies-page-success')
+
+  const cookieConsent = getConsentCookie()
+
+  $cookieFormFieldsets.forEach(($fieldset) => {
+    showUserPreference($fieldset, cookieConsent)
+    $fieldset.removeAttribute('hidden')
+  })
+
+  $cookieFormButton.removeAttribute('hidden')
+
+  $cookieForm.addEventListener('submit', (event) => {
+    savePreferences(event, $cookieFormFieldsets, $successNotification)
+  })
+}
+
+function savePreferences(event, $cookieFormFieldsets, $successNotification) {
+  event.preventDefault()
+
+  const preferences = {}
+
+  $cookieFormFieldsets.forEach(($fieldset) => {
+    const cookieType = getCookieType($fieldset)
     if (!cookieType) {
-      return null
+      return
     }
-    const preference = preferences?.[cookieType] ?? false
-    const radioValue = preference ? 'yes' : 'no'
-    const $radio = $fieldset.querySelector(
-      `input[name="cookies[${cookieType}]"][value=${radioValue}]`
+    const $selectedItem = $fieldset.querySelector(
+      `input[name="cookies[${cookieType}]"]:checked`
     )
-    if (!$radio) {
-      return null
+    if ($selectedItem instanceof HTMLInputElement) {
+      preferences[cookieType] = $selectedItem.value === 'yes'
     }
+  })
+
+  setConsentCookie(preferences)
+  showSuccessNotification($successNotification)
+}
+
+function showUserPreference($fieldset, preferences) {
+  const cookieType = getCookieType($fieldset)
+  if (!cookieType) {
+    return
+  }
+  const preference = preferences?.[cookieType] ?? false
+  const radioValue = preference ? 'yes' : 'no'
+  const $radio = $fieldset.querySelector(
+    `input[name="cookies[${cookieType}]"][value=${radioValue}]`
+  )
+  if ($radio) {
     $radio.checked = true
-    return $radio
-  }
-
-  showSuccessNotification() {
-    if (!this.$successNotification) {
-      return false
-    }
-    this.$successNotification.removeAttribute('hidden')
-    if (!this.$successNotification.getAttribute('tabindex')) {
-      this.$successNotification.setAttribute('tabindex', '-1')
-    }
-    this.$successNotification.focus()
-    window.scrollTo(0, 0)
-    return true
-  }
-
-  getCookieType($fieldset) {
-    return $fieldset.getAttribute('data-cookie-type') || null
   }
 }
+
+function showSuccessNotification($successNotification) {
+  if (!($successNotification instanceof HTMLElement)) {
+    return
+  }
+  $successNotification.removeAttribute('hidden')
+  if (!$successNotification.getAttribute('tabindex')) {
+    $successNotification.setAttribute('tabindex', '-1')
+  }
+  $successNotification.focus()
+  window.scrollTo(0, 0)
+}
+
+function getCookieType($fieldset) {
+  return $fieldset.dataset.cookieType || null
+}
+
+export { initCookiesPage }

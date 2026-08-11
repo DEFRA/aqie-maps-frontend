@@ -1,4 +1,4 @@
-import { loadAnalytics } from './load-analytics.mjs'
+import { loadAnalytics } from './load-analytics.js'
 
 const CONSENT_COOKIE_NAME = 'airaqie_cookies_analytics'
 
@@ -15,7 +15,11 @@ const DEFAULT_COOKIE_CONSENT = {
   analytics: false
 }
 
-export function manageCookie(name, value, options = {}) {
+const DEFAULT_COOKIE_EXPIRY_DAYS = 30
+const CONSENT_COOKIE_EXPIRY_DAYS = 365
+const MS_PER_DAY = 24 * 60 * 60 * 1000
+
+function manageCookie(name, value, options = {}) {
   if (arguments.length === 1) {
     return getCookie(name)
   }
@@ -23,12 +27,12 @@ export function manageCookie(name, value, options = {}) {
     return deleteCookie(name)
   }
   if (!options.days) {
-    options.days = 30
+    options.days = DEFAULT_COOKIE_EXPIRY_DAYS
   }
   return setCookie(name, value, options)
 }
 
-export function getConsentCookie() {
+function getConsentCookie() {
   const consentCookie = getCookie(CONSENT_COOKIE_NAME)
   if (!consentCookie) {
     return null
@@ -40,14 +44,14 @@ export function getConsentCookie() {
   }
 }
 
-export function isValidConsentCookie(options) {
+function isValidConsentCookie(options) {
   // @ts-expect-error Property does not exist on window
   return options && options.version >= window.AQ_CONSENT_COOKIE_VERSION
 }
 
-export function setConsentCookie(options) {
+function setConsentCookie(options) {
   const cookieConsent =
-    getConsentCookie() || JSON.parse(JSON.stringify(DEFAULT_COOKIE_CONSENT))
+    getConsentCookie() || structuredClone(DEFAULT_COOKIE_CONSENT)
 
   for (const option in options) {
     cookieConsent[option] = options[option]
@@ -58,14 +62,16 @@ export function setConsentCookie(options) {
   // @ts-expect-error Property does not exist on window
   cookieConsent.version = window.AQ_CONSENT_COOKIE_VERSION
 
-  setCookie(CONSENT_COOKIE_NAME, JSON.stringify(cookieConsent), { days: 365 })
+  setCookie(CONSENT_COOKIE_NAME, JSON.stringify(cookieConsent), {
+    days: CONSENT_COOKIE_EXPIRY_DAYS
+  })
   resetCookies()
 }
 
-export function resetCookies() {
+function resetCookies() {
   try {
     const options =
-      getConsentCookie() || JSON.parse(JSON.stringify(DEFAULT_COOKIE_CONSENT))
+      getConsentCookie() || structuredClone(DEFAULT_COOKIE_CONSENT)
 
     for (const cookieType in options) {
       if (cookieType === 'version' || cookieType === 'essential') {
@@ -89,11 +95,11 @@ export function resetCookies() {
       }
     }
   } catch (error) {
-    console.error('Failed to reset cookies', error) // eslint-disable-line no-console
+    console.error('Failed to reset cookies', error)
   }
 }
 
-export function removeUACookies() {
+function removeUACookies() {
   for (const UACookie of [
     '_gid',
     '_gat_UA-26179049-17',
@@ -124,7 +130,7 @@ function userAllowsCookie(cookieName) {
   }
   for (const category in COOKIE_CATEGORIES) {
     if (Object.hasOwn(COOKIE_CATEGORIES, category)) {
-      if (COOKIE_CATEGORIES[category].indexOf(cookieName) !== -1) {
+      if (COOKIE_CATEGORIES[category].includes(cookieName)) {
         return userAllowsCookieCategory(category, cookiePreferences)
       }
     }
@@ -151,10 +157,10 @@ function setCookie(name, value, options) {
   try {
     if (userAllowsCookie(name)) {
       options = options || {}
-      let cookieString = `${name}=${value}; path=/`
+      let cookieString = `${name}=${value}; path=/; SameSite=Lax`
       if (options.days) {
         const date = new Date()
-        date.setTime(date.getTime() + options.days * 24 * 60 * 60 * 1000)
+        date.setTime(date.getTime() + options.days * MS_PER_DAY)
         cookieString += `; expires=${date.toUTCString()}`
       }
       if (document.location.protocol === 'https:') {
@@ -163,7 +169,7 @@ function setCookie(name, value, options) {
       document.cookie = cookieString
     }
   } catch (error) {
-    console.error(`Failed to set cookie: ${name}`, error) // eslint-disable-line no-console
+    console.error(`Failed to set cookie: ${name}`, error)
   }
 }
 
@@ -176,6 +182,15 @@ function deleteCookie(name) {
       document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;domain=.${domain};path=/`
     }
   } catch (error) {
-    console.error(`Failed to delete cookie: ${name}`, error) // eslint-disable-line no-console
+    console.error(`Failed to delete cookie: ${name}`, error)
   }
+}
+
+export {
+  manageCookie,
+  getConsentCookie,
+  isValidConsentCookie,
+  setConsentCookie,
+  resetCookies,
+  removeUACookies
 }
