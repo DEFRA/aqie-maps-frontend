@@ -1,6 +1,7 @@
 // @ts-nocheck
+// gtag must use `arguments` (not rest params) — GTM checks for an Arguments object in the dataLayer
 function gtag() {
-  window.dataLayer.push(arguments)
+  window.dataLayer.push(arguments) // NOSONAR
 }
 
 function loadAnalytics() {
