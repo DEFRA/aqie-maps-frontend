@@ -1,11 +1,12 @@
 // @ts-nocheck
+function gtag() {
+  window.dataLayer.push(arguments)
+}
+
 function loadAnalytics() {
   if (!window.gtmLoaded) {
     window.gtmLoaded = true
     window.dataLayer = window.dataLayer || []
-    function gtag() {
-      window.dataLayer.push(arguments)
-    }
     // Only runs after the user has accepted analytics cookies
     gtag('consent', 'default', {
       ad_storage: 'granted',
@@ -21,12 +22,12 @@ function loadAnalytics() {
     gtag('js', new Date())
     gtag('config', 'G-NX0F88HVBL')
     // prettier-ignore
-    ;(function (w, d, s, l, i) {
-      const f = d.getElementsByTagName(s)[0]
-      const j = d.createElement(s)
-      const dl = l !== 'dataLayer' ? '&l=' + l : ''
+    ;(function (_win, doc, tagName, dataLayerName, containerId) {
+      const f = doc.getElementsByTagName(tagName)[0]
+      const j = doc.createElement(tagName)
+      const dl = dataLayerName !== 'dataLayer' ? '&l=' + dataLayerName : ''
       j.async = true
-      j.src = `https://www.googletagmanager.com/gtm.js?id=${i}${dl}`
+      j.src = `https://www.googletagmanager.com/gtm.js?id=${containerId}${dl}`
       f.parentNode.insertBefore(j, f)
     })(window, document, 'script', 'dataLayer', 'GTM-MD2RN3RG')
   }

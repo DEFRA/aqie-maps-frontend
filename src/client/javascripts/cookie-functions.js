@@ -129,10 +129,8 @@ function userAllowsCookie(cookieName) {
     cookiePreferences = DEFAULT_COOKIE_CONSENT
   }
   for (const category in COOKIE_CATEGORIES) {
-    if (Object.hasOwn(COOKIE_CATEGORIES, category)) {
-      if (COOKIE_CATEGORIES[category].includes(cookieName)) {
-        return userAllowsCookieCategory(category, cookiePreferences)
-      }
+    if (Object.hasOwn(COOKIE_CATEGORIES, category) && COOKIE_CATEGORIES[category].includes(cookieName)) {
+      return userAllowsCookieCategory(category, cookiePreferences)
     }
   }
   return false
