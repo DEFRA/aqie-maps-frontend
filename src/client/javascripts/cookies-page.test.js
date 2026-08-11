@@ -165,4 +165,40 @@ describe('#initCookiesPage', () => {
       analytics: false
     })
   })
+
+  test('Should ignore fieldsets without a data-cookie-type attribute', async () => {
+    document.body.innerHTML = `
+      <div class="app-cookies-page">
+        <div class="js-cookies-page-success" hidden></div>
+        <form class="js-cookies-page-form">
+          <fieldset class="js-cookies-page-form-fieldset">
+            <input type="radio" name="cookies[unknown]" value="yes" />
+            <input type="radio" name="cookies[unknown]" value="no" />
+          </fieldset>
+          <fieldset
+            class="js-cookies-page-form-fieldset"
+            data-cookie-type="analytics"
+            hidden
+          >
+            <input type="radio" name="cookies[analytics]" value="yes" />
+            <input type="radio" name="cookies[analytics]" value="no" />
+          </fieldset>
+          <button class="js-cookies-form-button" hidden>Save</button>
+        </form>
+      </div>
+    `
+    const $module = document.querySelector('.app-cookies-page')
+    const CookieFunctions = await import('./cookie-functions.js')
+    CookieFunctions.getConsentCookie.mockReturnValue({ analytics: true })
+    const { initCookiesPage } = await import('./cookies-page.js')
+    initCookiesPage($module)
+
+    $module
+      .querySelector('.js-cookies-page-form')
+      .dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }))
+
+    expect(CookieFunctions.setConsentCookie).toHaveBeenCalledWith({
+      analytics: true
+    })
+  })
 })

@@ -13,7 +13,6 @@ export default defineConfig({
       exclude: [
         ...configDefaults.exclude,
         'src/index.js',
-        'src/client/javascripts/application.js',
         'src/config/nunjucks/filters/filters.js',
         '.public',
         'coverage',
