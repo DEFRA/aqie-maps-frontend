@@ -2,7 +2,7 @@ import { cookiesContent } from './content.js'
 
 const COOKIES_PATH = '/cookies'
 
-function cookiesHandler(request, h) {
+function cookiesHandler(_request, h) {
   const {
     pageTitle,
     description,
