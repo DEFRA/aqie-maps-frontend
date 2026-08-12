@@ -1,0 +1,91 @@
+{% from "govuk/components/cookie-banner/macro.njk" import govukCookieBanner %}
+
+{% set html %}
+  <p class="govuk-body">{{ cookieBanner.paragraphs.a }}</p>
+  <p class="govuk-body">{{ cookieBanner.paragraphs.b }}</p>
+{% endset %}
+
+{% set acceptHtml %}
+  <p class="govuk-body">{{ cookieBanner.hideCookieMsg.text0 }} <a class="govuk-link" href="/cookies/">{{ cookieBanner.hideCookieMsg.text2 }}</a>{{ cookieBanner.hideCookieMsg.text3 }}</p>
+{% endset %}
+
+{% set rejectHtml %}
+  <p class="govuk-body">{{ cookieBanner.hideCookieMsg.text1 }} <a class="govuk-link" href="/cookies/">{{ cookieBanner.hideCookieMsg.text2 }}</a>{{ cookieBanner.hideCookieMsg.text3 }}</p>
+{% endset %}
+
+{{ govukCookieBanner({
+  ariaLabel: cookieBanner.title,
+  hidden: true,
+  attributes: {
+    "data-module": "govuk-cookie-banner"
+  },
+  messages: [
+    {
+      headingText: cookieBanner.title,
+      html: html,
+      actions: [
+        {
+          text: cookieBanner.buttons.a,
+          type: "button",
+          classes: "js-cookie-banner-accept"
+        },
+        {
+          text: cookieBanner.buttons.b,
+          type: "button",
+          classes: "js-cookie-banner-reject"
+        },
+        {
+          text: cookieBanner.buttons.c,
+          href: "/cookies/"
+        }
+      ],
+      classes: "app-width-container js-cookie-banner-message"
+    },
+    {
+      html: acceptHtml,
+      role: "alert",
+      hidden: true,
+      actions: [
+        {
+          text: cookieBanner.hideCookieMsg.buttonText,
+          type: "button",
+          classes: "js-cookie-banner-hide js-cookie-banner-hide--accept"
+        }
+      ],
+      classes: "js-cookie-banner-confirmation-accept app-width-container"
+    },
+    {
+      html: rejectHtml,
+      role: "alert",
+      hidden: true,
+      actions: [
+        {
+          text: cookieBanner.hideCookieMsg.buttonText,
+          type: "button",
+          classes: "js-cookie-banner-hide js-cookie-banner-hide--reject"
+        }
+      ],
+      classes: "js-cookie-banner-confirmation-reject app-width-container"
+    }
+  ]
+}) }}
+
+{# Show the banner immediately if no consent cookie exists, to avoid layout shift #}
+<script>
+  window.AQ_CONSENT_COOKIE_VERSION = 1
+
+  ;(function () {
+    if (!('noModule' in HTMLScriptElement.prototype)) {
+      return
+    }
+    if (window.location.pathname !== '/cookies/') {
+      var currentConsentCookie = document.cookie.match(new RegExp('(^| )airaqie_cookies_analytics=([^;]+)'))
+      if (!currentConsentCookie) {
+        var cookieBanner = document.querySelector("[data-module='govuk-cookie-banner']")
+        if (cookieBanner) {
+          cookieBanner.removeAttribute('hidden')
+        }
+      }
+    }
+  })()
+</script>
