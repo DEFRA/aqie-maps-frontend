@@ -14,8 +14,10 @@ const contentSecurityPolicy = {
       'wss',
       'data:',
       'https://tiles.openfreemap.org',
-      'https://www.googletagmanager.com',
-      'https://www.google-analytics.com'
+      'https://www.google.com',
+      'https://*.google-analytics.com',
+      'https://*.analytics.google.com',
+      'https://*.googletagmanager.com'
     ],
     mediaSrc: ['self'],
     styleSrc: [
