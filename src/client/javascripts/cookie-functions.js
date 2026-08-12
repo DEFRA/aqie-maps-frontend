@@ -2,11 +2,10 @@ import { loadAnalytics } from './load-analytics.js'
 
 const CONSENT_COOKIE_NAME = 'airaqie_cookies_analytics'
 
-const TRACKING_PREVIEW_ID = 'NX0F88HVBL'
-const TRACKING_LIVE_ID = 'NX0F88HVBL'
+const TRACKING_ID = 'NX0F88HVBL'
 
 const COOKIE_CATEGORIES = {
-  analytics: ['_ga', `_ga_${TRACKING_PREVIEW_ID}`, `_ga_${TRACKING_LIVE_ID}`],
+  analytics: ['_ga', `_ga_${TRACKING_ID}`],
   // Essential cookies cannot be deselected but must be listed here
   essential: ['airaqie_cookies_analytics']
 }
@@ -79,13 +78,11 @@ function resetCookies() {
       }
 
       if (cookieType === 'analytics' && options[cookieType]) {
-        window[`ga-disable-UA-${TRACKING_PREVIEW_ID}`] = false
-        window[`ga-disable-UA-${TRACKING_LIVE_ID}`] = false
+        window[`ga-disable-G-${TRACKING_ID}`] = false
         loadAnalytics()
         removeUACookies()
       } else {
-        window[`ga-disable-UA-${TRACKING_PREVIEW_ID}`] = true
-        window[`ga-disable-UA-${TRACKING_LIVE_ID}`] = true
+        window[`ga-disable-G-${TRACKING_ID}`] = true
       }
 
       if (!options[cookieType]) {
