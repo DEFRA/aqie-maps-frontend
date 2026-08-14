@@ -13,7 +13,8 @@ const isProduction = process.env.NODE_ENV === 'production'
 const isTest = process.env.NODE_ENV === 'test'
 const isDevelopment = process.env.NODE_ENV === 'development'
 
-const insecureDefaultCookiePassword = 'the-password-must-be-at-least-32-characters-long'
+const insecureDefaultCookiePassword =
+  'the-password-must-be-at-least-32-characters-long'
 
 convict.addFormats(convictFormatWithValidator)
 
