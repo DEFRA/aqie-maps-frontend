@@ -84,6 +84,7 @@
   },
   "overrides": {
     "tmp": "0.2.5",
+    "nanoid": "3.3.18",
     "hapi-pulse": {
       "joi": "17.13.4"
     }
