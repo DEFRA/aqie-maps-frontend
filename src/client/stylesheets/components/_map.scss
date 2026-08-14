@@ -1,3 +1,11 @@
+// .app-map-container is fixed and covers the full viewport, so any
+// non-positioned content (e.g. the GOV.UK cookie banner) painted before it
+// in the DOM gets visually hidden underneath it unless raised above it here.
+.govuk-cookie-banner {
+  position: relative;
+  z-index: 1000;
+}
+
 .app-map-container {
   position: fixed;
   inset: 0;
