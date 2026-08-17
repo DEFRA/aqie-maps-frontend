@@ -951,6 +951,20 @@ describe('#station panel', () => {
     expect(details.textContent).toContain('11')
   })
 
+  test('Should show DAQI (forecast) as Not available when the forecast value is not a number', async () => {
+    const forecast = [
+      {
+        location: { coordinates: [51.5, -0.1] },
+        forecast: [{ value: 'unavailable' }]
+      }
+    ]
+    await loadStationsAndIdleWithForecasts([station], forecast)
+    mapClickCallback({ coords: [-0.1, 51.5] })
+    const details = document.getElementById('sp-details')
+    expect(details.textContent).toContain('DAQI (forecast)')
+    expect(details.textContent).toContain('Not available')
+  })
+
   test('Should move focus to the station panel when it opens', async () => {
     await loadStationsAndIdle([station])
     const panel = document.getElementById('station-panel')
