@@ -21,7 +21,11 @@ function stationMatchesFilter(station) {
     station.siteStatus ||
     ''
   ).toLowerCase()
-  if (stationStatus && stationStatus !== 'current' && stationStatus !== 'active') {
+  if (
+    stationStatus &&
+    stationStatus !== 'current' &&
+    stationStatus !== 'active'
+  ) {
     return false
   }
   if (filterState.mode === 'other') {
