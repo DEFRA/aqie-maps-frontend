@@ -7,23 +7,6 @@ const filterState = {
   selected: new Set(['NO2', 'O3', 'SO2', 'PM25', 'PM10'])
 }
 
-let showInactiveStations = true
-
-/**
- * Returns true when a station's status indicates it is currently active.
- * @param {object} station
- * @returns {boolean}
- */
-function stationIsActive(station) {
-  const st = (
-    station.stationStatus ||
-    station.status ||
-    station.siteStatus ||
-    ''
-  ).toLowerCase()
-  return !st || st === 'current' || st === 'active'
-}
-
 /**
  * Returns true if the station should be shown given the current filter state.
  * Stations with no pollutant data are always shown (data may not have loaded yet).
@@ -31,9 +14,6 @@ function stationIsActive(station) {
  * @returns {boolean}
  */
 function stationMatchesFilter(station) {
-  if (!showInactiveStations && !stationIsActive(station)) {
-    return false
-  }
   if (filterState.mode === 'other') {
     return true
   }
@@ -180,15 +160,11 @@ function initPollutantCheckboxes(onFilterChange) {
     if (event.target?.type !== 'checkbox') {
       return
     }
-    if (event.target.id === 'filter-show-inactive') {
-      showInactiveStations = event.target.checked
+    const codes = event.target.value.split(',')
+    if (event.target.checked) {
+      codes.forEach((code) => filterState.selected.add(code))
     } else {
-      const codes = event.target.value.split(',')
-      if (event.target.checked) {
-        codes.forEach((code) => filterState.selected.add(code))
-      } else {
-        codes.forEach((code) => filterState.selected.delete(code))
-      }
+      codes.forEach((code) => filterState.selected.delete(code))
     }
     onFilterChange()
   })
