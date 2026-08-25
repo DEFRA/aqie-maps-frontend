@@ -39,6 +39,7 @@ As an AI assistant creating a GDS compliant frontend you should:
 - **Test suggestions** against GOV.UK Design System guidelines
 - **Explain the reasoning** behind accessibility and content design choices
 - **Suggest improvements** that align with user-centered design principles
+- **Check for security vulnerabilities** (e.g. CWE weaknesses such as XSS, hardcoded secrets, injection) in any code you write or touch, and flag known CWE categories by ID when raising an issue. Always provide a severity and description of the issue and impacted code
 
 ## Project Overview
 
@@ -257,3 +258,4 @@ Before suggesting any code changes, ensure:
 - [ ] Error handling and validation is implemented
 - [ ] Code follows established patterns in the project
 - [ ] Existing styles have been checked for reuse before creating new ones
+- [ ] Code has been checked for common CWE vulnerabilities (e.g. XSS, injection, hardcoded secrets, insecure defaults), with severity and description of the issue and impacted code provided for any findings

@@ -1,6 +1,6 @@
 /* global defra, history, MutationObserver */
 
-import { daqiBand, daqiMarkerOptions } from './map-daqi.js'
+import { daqiBand, daqiMarkerOptions, toSafeDaqiIndex } from './map-daqi.js'
 import {
   escapeHtml,
   formatDate,
@@ -196,7 +196,7 @@ function stationDaqi(station) {
     return null
   }
   if (filterState.mapMode === 'aurn') {
-    return aurnDataByStation.get(station.localSiteID) ?? null
+    return toSafeDaqiIndex(aurnDataByStation.get(station.localSiteID))
   }
   const forecast = forecastForStation(station)
   if (
@@ -204,7 +204,7 @@ function stationDaqi(station) {
     Array.isArray(forecast.forecast) &&
     forecast.forecast.length > 0
   ) {
-    return daqiValueForDay(forecast, selectedForecastDay)
+    return toSafeDaqiIndex(daqiValueForDay(forecast, selectedForecastDay))
   }
   return null
 }
@@ -457,12 +457,13 @@ function buildDaqiTag(daqiValue) {
     ? `aq-daqi-tag aq-daqi-tag--${bandKey}`
     : 'aq-daqi-tag'
   const bandSuffix = band ? ` (${band.toLowerCase()})` : ''
+
   return `<span class="${daqiClass}">${daqiValue}${bandSuffix}</span>`
 }
 
 function buildDaqiRow(station) {
   if (filterState.mapMode === 'aurn') {
-    const aurnDaqi = aurnDataByStation.get(station.localSiteID)
+    const aurnDaqi = toSafeDaqiIndex(aurnDataByStation.get(station.localSiteID))
     if (aurnDaqi == null) {
       return ['DAQI (observed)', NOT_AVAILABLE]
     }
@@ -476,11 +477,13 @@ function buildDaqiRow(station) {
   ) {
     return null
   }
-  return [
-    'DAQI (forecast)',
-    buildDaqiTag(daqiValueForDay(forecast, selectedForecastDay)),
-    true
-  ]
+  const forecastDaqi = toSafeDaqiIndex(
+    daqiValueForDay(forecast, selectedForecastDay)
+  )
+  if (forecastDaqi == null) {
+    return ['DAQI (forecast)', NOT_AVAILABLE]
+  }
+  return ['DAQI (forecast)', buildDaqiTag(forecastDaqi), true]
 }
 
 /**

@@ -13,6 +13,9 @@ const isProduction = process.env.NODE_ENV === 'production'
 const isTest = process.env.NODE_ENV === 'test'
 const isDevelopment = process.env.NODE_ENV === 'development'
 
+const insecureDefaultCookiePassword =
+  'the-password-must-be-at-least-32-characters-long'
+
 convict.addFormats(convictFormatWithValidator)
 
 export const config = convict({
@@ -144,7 +147,7 @@ export const config = convict({
       password: {
         doc: 'session cookie password',
         format: String,
-        default: 'the-password-must-be-at-least-32-characters-long',
+        default: insecureDefaultCookiePassword,
         env: 'SESSION_COOKIE_PASSWORD',
         sensitive: true
       },
@@ -235,3 +238,12 @@ export const config = convict({
 })
 
 config.validate({ allowed: 'strict' })
+
+if (
+  config.get('isProduction') &&
+  config.get('session.cookie.password') === insecureDefaultCookiePassword
+) {
+  throw new Error(
+    'SESSION_COOKIE_PASSWORD must be set in production - refusing to start with the default insecure password'
+  )
+}
