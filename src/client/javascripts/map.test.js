@@ -665,13 +665,14 @@ describe('#DAQI markers', () => {
     expect(selectedCall[2].symbolSvgContent).toContain('fill="#555555"')
   })
 
-  test('Should not assign DAQI to a closed station', async () => {
+  test('Should not plot a closed station', async () => {
     const closedStation = { ...station, stationStatus: 'closed' }
     await loadWithForecasts([closedStation], forecastAt(51.5, -0.1, 5))
-    const call = mockMapInstance.addMarker.mock.calls[0]
-    // Closed → DAQI null → grey, no DAQI label
-    expect(call[2].symbolSvgContent).toContain('fill="#777777"')
-    expect(call[2].symbolSvgContent).not.toContain('#ffcf00')
+    expect(mockMapInstance.addMarker).not.toHaveBeenCalledWith(
+      expect.stringContaining('UKA001'),
+      expect.any(Array),
+      expect.any(Object)
+    )
   })
 
   test('Should skip forecast entry with no coordinates and still match the next', async () => {
@@ -1565,6 +1566,40 @@ describe('#filter panel', () => {
     scroll.appendChild(div)
     div.dispatchEvent(new Event('change', { bubbles: true }))
     expect(mockMapInstance.addMarker).not.toHaveBeenCalled()
+  })
+
+  test('Should never plot a closed station', async () => {
+    const stations = [
+      {
+        localSiteID: 'UKA001',
+        location: { coordinates: [51.5, -0.1] },
+        stationStatus: 'closed',
+        pollutants: ['NO2']
+      }
+    ]
+    await loadAndIdleWithFilter({ stations })
+    expect(mockMapInstance.addMarker).not.toHaveBeenCalledWith(
+      'ms-UKA001',
+      expect.any(Array),
+      expect.any(Object)
+    )
+  })
+
+  test('Should never plot an inactive station', async () => {
+    const stations = [
+      {
+        localSiteID: 'UKA002',
+        location: { coordinates: [52.0, -0.2] },
+        stationStatus: 'inactive',
+        pollutants: ['PM10']
+      }
+    ]
+    await loadAndIdleWithFilter({ stations })
+    expect(mockMapInstance.addMarker).not.toHaveBeenCalledWith(
+      'ms-UKA002',
+      expect.any(Array),
+      expect.any(Object)
+    )
   })
 
   test('Should skip the currently selected station when re-plotting all markers', async () => {

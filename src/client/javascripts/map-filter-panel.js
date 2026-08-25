@@ -8,12 +8,22 @@ const filterState = {
 }
 
 /**
- * Returns true if the station should be shown given the current filter state.
- * Stations with no pollutant data are always shown (data may not have loaded yet).
+ * Returns true if the station should be plotted on the map.
+ * Closed and inactive stations are always excluded.
+ * Stations with no pollutant data are always included (data may not have loaded yet).
  * @param {object} station
  * @returns {boolean}
  */
 function stationMatchesFilter(station) {
+  const stationStatus = (
+    station.stationStatus ||
+    station.status ||
+    station.siteStatus ||
+    ''
+  ).toLowerCase()
+  if (stationStatus && stationStatus !== 'current' && stationStatus !== 'active') {
+    return false
+  }
   if (filterState.mode === 'other') {
     return true
   }
