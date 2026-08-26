@@ -7,6 +7,8 @@ const filterState = {
   selected: new Set(['NO2', 'O3', 'SO2', 'PM25', 'PM10'])
 }
 
+const ACTIVE_STATUSES = new Set(['', 'current', 'active'])
+
 /**
  * Returns true if the station should be plotted on the map.
  * Closed and inactive stations are always excluded.
@@ -21,11 +23,7 @@ function stationMatchesFilter(station) {
     station.siteStatus ||
     ''
   ).toLowerCase()
-  if (
-    stationStatus &&
-    stationStatus !== 'current' &&
-    stationStatus !== 'active'
-  ) {
+  if (!ACTIVE_STATUSES.has(stationStatus)) {
     return false
   }
   if (filterState.mode === 'other') {

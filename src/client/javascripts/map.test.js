@@ -1255,6 +1255,17 @@ describe('#marker keyboard accessibility', () => {
     expect(nonMarker.getAttribute('tabindex')).toBeNull()
   })
 
+  test('Should not re-initialise a marker element that already has keyboard-init set', async () => {
+    await loadWithMarkerDom([station])
+    const markerEl = document.getElementById('map-marker-ms-UKA001')
+    const addEventSpy = vi.spyOn(markerEl, 'addEventListener')
+    // Remove and re-add to trigger the MutationObserver again
+    markerEl.remove()
+    document.getElementById('map').appendChild(markerEl)
+    await Promise.resolve()
+    expect(addEventSpy).not.toHaveBeenCalled()
+  })
+
   test('Should blur a focused marker on mousedown on the map container', async () => {
     await loadWithMarkerDom([station])
     const markerEl = document.getElementById('map-marker-ms-UKA001')
@@ -1623,6 +1634,32 @@ describe('#filter panel', () => {
       expect.any(Object)
     )
     expect(mockMapInstance.removeMarker).not.toHaveBeenCalledWith('ms-UKA001')
+  })
+
+  test('Should sort two stations at the same latitude by DAQI', async () => {
+    const stations = [
+      {
+        localSiteID: 'UKA001',
+        location: { coordinates: [51.5, -0.1] },
+        pollutants: ['NO2']
+      },
+      {
+        localSiteID: 'UKA002',
+        location: { coordinates: [51.5, -0.2] },
+        pollutants: ['O3']
+      }
+    ]
+    await loadAndIdleWithFilter({ stations })
+    expect(mockMapInstance.addMarker).toHaveBeenCalledWith(
+      'ms-UKA001',
+      expect.any(Array),
+      expect.any(Object)
+    )
+    expect(mockMapInstance.addMarker).toHaveBeenCalledWith(
+      'ms-UKA002',
+      expect.any(Array),
+      expect.any(Object)
+    )
   })
 
   test('Should do nothing when filter panel element is not in DOM', async () => {
