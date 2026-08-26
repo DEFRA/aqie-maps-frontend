@@ -23,13 +23,14 @@ function loadAnalytics() {
     gtag('js', new Date())
     gtag('config', 'G-NX0F88HVBL')
     // prettier-ignore
-    ;(function (_win, doc, tagName, containerId) {
+    ;(function (_win, doc, tagName, dataLayerName, containerId) {
       const f = doc.getElementsByTagName(tagName)[0]
       const j = doc.createElement(tagName)
+      const dl = dataLayerName !== 'dataLayer' ? '&l=' + dataLayerName : ''
       j.async = true
-      j.src = `https://www.googletagmanager.com/gtm.js?id=${containerId}`
+      j.src = `https://www.googletagmanager.com/gtm.js?id=${containerId}${dl}`
       f.parentNode.insertBefore(j, f)
-    })(window, document, 'script', 'GTM-MD2RN3RG')
+    })(window, document, 'script', 'dataLayer', 'GTM-MD2RN3RG')
   }
 }
 
