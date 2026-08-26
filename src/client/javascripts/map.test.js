@@ -895,10 +895,25 @@ describe('#station panel', () => {
       closeDate: '2020-12-31'
     }
     await loadStationsAndIdle([closedStation])
-    mapClickCallback({ coords: [-0.1, 51.5] })
+    globalThis.navigateToStation(closedStation)
     const details = document.getElementById('sp-details')
     expect(details.textContent).toContain('End date')
     expect(details.textContent).toContain('31 December 2020')
+  })
+
+  test('Should not select a closed station via ambient map click', async () => {
+    const closedStation = {
+      localSiteID: 'UKA001',
+      name: 'Old Station',
+      location: { coordinates: [51.5, -0.1] },
+      stationStatus: 'closed',
+      closeDate: '2020-12-31'
+    }
+    await loadStationsAndIdle([closedStation])
+    mapClickCallback({ coords: [-0.1, 51.5] })
+    expect(
+      document.getElementById('station-panel').classList.contains('visible')
+    ).toBe(false)
   })
 
   test('Should fall back to the raw code for an unrecognised pollutant', async () => {

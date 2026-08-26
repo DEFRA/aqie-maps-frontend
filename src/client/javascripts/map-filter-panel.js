@@ -10,6 +10,21 @@ const filterState = {
 const ACTIVE_STATUSES = new Set(['', 'current', 'active'])
 
 /**
+ * Returns true if the station is open (not closed/inactive).
+ * @param {object} station
+ * @returns {boolean}
+ */
+function isActiveStation(station) {
+  const stationStatus = (
+    station.stationStatus ||
+    station.status ||
+    station.siteStatus ||
+    ''
+  ).toLowerCase()
+  return ACTIVE_STATUSES.has(stationStatus)
+}
+
+/**
  * Returns true if the station should be plotted on the map.
  * Closed and inactive stations are always excluded.
  * Stations with no pollutant data are always included (data may not have loaded yet).
@@ -17,13 +32,7 @@ const ACTIVE_STATUSES = new Set(['', 'current', 'active'])
  * @returns {boolean}
  */
 function stationMatchesFilter(station) {
-  const stationStatus = (
-    station.stationStatus ||
-    station.status ||
-    station.siteStatus ||
-    ''
-  ).toLowerCase()
-  if (!ACTIVE_STATUSES.has(stationStatus)) {
+  if (!isActiveStation(station)) {
     return false
   }
   if (filterState.mode === 'other') {
@@ -212,4 +221,4 @@ function initFilterPanel(onFilterChange) {
   initPollutantCheckboxes(onFilterChange)
 }
 
-export { filterState, stationMatchesFilter, initFilterPanel }
+export { filterState, stationMatchesFilter, isActiveStation, initFilterPanel }

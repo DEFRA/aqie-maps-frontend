@@ -10,6 +10,7 @@ import {
 } from './map-utils.js'
 import {
   stationMatchesFilter,
+  isActiveStation,
   initFilterPanel,
   filterState
 } from './map-filter-panel.js'
@@ -646,7 +647,7 @@ map.on('map:click', (evt) => {
   let best = null
   let bestDist = Infinity
   sortedStationsByLat.forEach((station) => {
-    if (!hasValidCoords(station)) {
+    if (!hasValidCoords(station) || !isActiveStation(station)) {
       return
     }
     const lat = Number.parseFloat(station.location.coordinates[0])
