@@ -153,10 +153,11 @@ function resetDom() {
       </button>
     </div>
     <button id="exit-map" type="button">Exit map</button>
-    <div id="station-panel">
+    <div id="station-panel" data-dataselector-url="https://dataselector.example">
       <button id="sp-close"></button>
       <h2 id="sp-name"></h2>
       <dl id="sp-details"></dl>
+      <a id="sp-station-link" hidden></a>
     </div>
   `
 }
@@ -274,10 +275,11 @@ beforeEach(async () => {
       </button>
     </div>
     <button id="exit-map" type="button">Exit map</button>
-    <div id="station-panel">
+    <div id="station-panel" data-dataselector-url="https://dataselector.example">
       <button id="sp-close"></button>
       <h2 id="sp-name"></h2>
       <dl id="sp-details"></dl>
+      <a id="sp-station-link" hidden></a>
     </div>
   `
 
@@ -717,6 +719,32 @@ describe('#station panel', () => {
     expect(document.getElementById('sp-name').textContent).toContain(
       'London Test'
     )
+  })
+
+  test('Should set and unhide the station summary link when coordinates and dataselector URL are present', async () => {
+    await loadStationsAndIdle([station])
+    mapClickCallback({ coords: [-0.1, 51.5] })
+    const link = document.getElementById('sp-station-link')
+    expect(link.hidden).toBe(false)
+    expect(link.href).toBe(
+      'https://dataselector.example/station-summary?lat=51.5&lng=-0.1&name=London+Test'
+    )
+  })
+
+  test('Should hide the station summary link when the panel has no dataselector URL', async () => {
+    await loadStationsAndIdle([station])
+    document
+      .getElementById('station-panel')
+      .removeAttribute('data-dataselector-url')
+    mapClickCallback({ coords: [-0.1, 51.5] })
+    expect(document.getElementById('sp-station-link').hidden).toBe(true)
+  })
+
+  test('Should hide the station summary link when the station has no coordinates', async () => {
+    const noCoordsStation = { ...station, location: { coordinates: [] } }
+    await loadStationsAndIdle([noCoordsStation])
+    globalThis.navigateToStation(noCoordsStation)
+    expect(document.getElementById('sp-station-link').hidden).toBe(true)
   })
 
   test('Should populate station details in the panel', async () => {

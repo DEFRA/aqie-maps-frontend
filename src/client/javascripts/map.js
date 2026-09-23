@@ -577,6 +577,23 @@ function showStationPanel(station) {
     )
     .join('')
 
+  const stationLink = document.getElementById('sp-station-link')
+  if (stationLink) {
+    const [lat, lng] = station.location?.coordinates ?? []
+    const dataSelectorUrl = stationPanelElement.dataset.dataselectorUrl
+    if (dataSelectorUrl && lat != null && lng != null) {
+      const query = new URLSearchParams({
+        lat,
+        lng,
+        name: station.name ?? ''
+      })
+      stationLink.href = `${dataSelectorUrl}/station-summary?${query}`
+      stationLink.hidden = false
+    } else {
+      stationLink.hidden = true
+    }
+  }
+
   panelTrigger = document.activeElement
   stationPanelElement.classList.add('visible')
   hideKeyOverlay(false)
