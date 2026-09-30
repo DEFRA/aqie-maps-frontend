@@ -110,6 +110,7 @@ cp .env.example .env
 | :------------------------ | :------: | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `AQIE_BACK_END_URL`       |    ✅    | URL of the `aqie-back-end` service                                                                                                                                                       |
 | `AQIE_FORECAST_API_URL`   |    ✅    | URL of the `aqie-forecast-api` service                                                                                                                                                   |
+| `DATASELECTOR_FRONT_END_URL` |  Optional | Browser-reachable base URL of `aqie-dataselector-frontend`, used to deep-link from a station panel to its station summary page. Must be resolvable from the browser (e.g. `http://localhost:3010`), not a Docker-internal hostname. Leave unset to hide the link |
 | `OS_NAMES_API_KEY`        |    ✅    | API key for the OS Names API (UK geocoding) — obtain from the [OS Data Hub](https://osdatahub.os.uk/)                                                                                    |
 | `SESSION_COOKIE_PASSWORD` |    ✅    | Secret used to encrypt the session cookie. Must be at least 32 characters. Required when `NODE_ENV=production` (set by `compose.yml` — always applies when using Docker Compose locally) |
 
