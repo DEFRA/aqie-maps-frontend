@@ -210,7 +210,8 @@ export const config = convict({
     url: {
       doc: 'Base URL for the AQIE dataselector front-end service, used to link to station summaries',
       format: String,
-      default: 'http://localhost:3010',
+      nullable: true,
+      default: null,
       env: 'DATASELECTOR_FRONT_END_URL'
     }
   },
