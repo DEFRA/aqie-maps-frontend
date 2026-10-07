@@ -43,3 +43,33 @@ describe('#contentSecurityPolicy', () => {
     expect(cspHeader).toMatch(/img-src[^;]*https:\/\/tiles\.openfreemap\.org/)
   })
 })
+
+describe('#contentSecurityPolicy formAction', () => {
+  afterEach(() => {
+    vi.doUnmock('../../config/config.js')
+    vi.resetModules()
+  })
+
+  test('Should restrict form-action to self when no dataselector URL is configured', async () => {
+    vi.resetModules()
+    vi.doMock('../../config/config.js', () => ({
+      config: { get: () => null }
+    }))
+    const { contentSecurityPolicy } =
+      await import('./content-security-policy.js')
+    expect(contentSecurityPolicy.options.formAction).toEqual(['self'])
+  })
+
+  test('Should add the dataselector origin to form-action when configured', async () => {
+    vi.resetModules()
+    vi.doMock('../../config/config.js', () => ({
+      config: { get: () => 'https://dataselector.example' }
+    }))
+    const { contentSecurityPolicy } =
+      await import('./content-security-policy.js')
+    expect(contentSecurityPolicy.options.formAction).toEqual([
+      'self',
+      'https://dataselector.example'
+    ])
+  })
+})

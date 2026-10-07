@@ -33,6 +33,7 @@ const CLICK_SELECT_MAX_SQUARED_DEG = 0.01
 const MAP_KEY_OVERLAY_ID = 'map-key-overlay'
 const keyButtonElement = document.getElementById('key-button')
 const stationPanelElement = document.getElementById('station-panel')
+const stationFormElement = document.getElementById('sp-station-form')
 
 /**
  * Returns today's DAQI value from a forecast entry.
@@ -581,13 +582,11 @@ function showStationPanel(station) {
   if (stationLink) {
     const [lat, lng] = station.location?.coordinates ?? []
     const dataSelectorUrl = stationPanelElement.dataset.dataselectorUrl
-    if (dataSelectorUrl && lat != null && lng != null) {
-      const query = new URLSearchParams({
-        lat,
-        lng,
-        name: station.name ?? ''
-      })
-      stationLink.href = `${dataSelectorUrl}/station-summary?${query}`
+    if (dataSelectorUrl && lat != null && lng != null && stationFormElement) {
+      stationFormElement.action = `${dataSelectorUrl}/station-summary`
+      stationFormElement.elements.lat.value = lat
+      stationFormElement.elements.lng.value = lng
+      stationFormElement.elements.name.value = station.name ?? ''
       stationLink.hidden = false
     } else {
       stationLink.hidden = true
@@ -696,5 +695,14 @@ globalThis.navigateToStation = function (station) {
 document
   .getElementById('sp-close')
   ?.addEventListener('click', closeStationPanel)
+
+// The visible trigger is a link (not a button) to match existing styling,
+// but it submits the hidden form rather than navigating via href.
+document
+  .getElementById('sp-station-link')
+  ?.addEventListener('click', (event) => {
+    event.preventDefault()
+    stationFormElement?.submit()
+  })
 
 export { map }

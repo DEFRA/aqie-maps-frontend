@@ -13,7 +13,13 @@
     </div>
     <dl class="aq-station-info-list govuk-body-s govuk-!-margin-top-2" id="sp-details"></dl>
     <div class="govuk-!-margin-top-4 govuk-!-border-top-1 govuk-!-border-top-grey-2 govuk-!-padding-top-2">
-      <a href="#" id="sp-station-link" class="govuk-link" target="_blank" rel="noopener noreferrer">View full station summary</a>
+      <!-- POSTed (not a plain GET link) so lat/lng/name aren't exposed in the URL, browser history or server logs -->
+      <form id="sp-station-form" method="post" target="_blank" rel="noopener noreferrer" hidden>
+        <input type="hidden" name="lat">
+        <input type="hidden" name="lng">
+        <input type="hidden" name="name">
+      </form>
+      <a href="#" id="sp-station-link" class="govuk-link">View full station summary</a>
     </div>
   </div>
 </div>
