@@ -182,6 +182,110 @@ function updateStationLinkForm(
 }
 
 /**
+ * Restores the previously selected marker (if any) to its default DAQI colour.
+ * @param {object} ctx
+ * @param {object} ctx.map - the InteractiveMap instance
+ * @param {() => Array<object>} ctx.getSortedStations
+ * @param {() => object} ctx.getDaqiContext - see {@link buildDaqiRow} for shape
+ * @param {object} ctx.panelState
+ */
+function restorePreviousMarker({
+  map,
+  getSortedStations,
+  getDaqiContext,
+  panelState
+}) {
+  if (!panelState.selectedMarkerId) {
+    return
+  }
+  const prev = getSortedStations().find(
+    (s) => stationMarkerId(s) === panelState.selectedMarkerId
+  )
+  if (prev) {
+    map.addMarker(
+      panelState.selectedMarkerId,
+      stationMapCoords(prev),
+      daqiMarkerOptions(
+        stationDaqi({ station: prev, ...getDaqiContext() }),
+        false
+      )
+    )
+  }
+}
+
+/**
+ * Populates and shows the station panel for the given station.
+ * @param {{ name?: string, stationStatus?: string, status?: string, siteStatus?: string,
+ *   pollutants?: string[], localAuthority?: string, areaType?: string,
+ *   openDate?: string, closeDate?: string }} station
+ * @param {object} ctx
+ * @param {HTMLElement} ctx.stationPanelElement
+ * @param {HTMLFormElement} ctx.stationFormElement
+ * @param {() => object} ctx.getDaqiContext - see {@link buildDaqiRow} for shape
+ * @param {object} ctx.panelState
+ */
+function showStationPanel(
+  station,
+  { stationPanelElement, stationFormElement, getDaqiContext, panelState }
+) {
+  if (!stationPanelElement?.isConnected) {
+    return
+  }
+
+  const status = (
+    station.stationStatus ||
+    station.status ||
+    station.siteStatus ||
+    ''
+  ).toLowerCase()
+  const isClosed = status === 'closed'
+
+  renderStationHeading(station, status, isClosed)
+  renderStationDetails(station, isClosed, getDaqiContext())
+  updateStationLinkForm(station, stationPanelElement, stationFormElement)
+
+  panelState.panelTrigger = document.activeElement
+  stationPanelElement.classList.add('visible')
+  hideKeyOverlay(false)
+  stationPanelElement.focus()
+}
+
+/**
+ * Restores the previously selected marker to its DAQI colour and hides the station panel.
+ * @param {object} ctx - see {@link restorePreviousMarker} for shape
+ */
+function closeStationPanel(ctx) {
+  const { stationPanelElement, panelState } = ctx
+  if (stationPanelElement) {
+    stationPanelElement.classList.remove('visible')
+  }
+  restorePreviousMarker(ctx)
+  panelState.selectedMarkerId = null
+  if (!keyOverlayState.closedByUser) {
+    showKeyOverlay()
+  }
+  panelState.panelTrigger?.focus()
+  panelState.panelTrigger = null
+}
+
+/**
+ * Selects a station: restores the previous marker, highlights the new one, and shows the panel.
+ * @param {object} station
+ * @param {object} ctx - see {@link restorePreviousMarker} and {@link showStationPanel} for shape
+ */
+function highlightStation(station, ctx) {
+  const { map, getDaqiContext, panelState } = ctx
+  restorePreviousMarker(ctx)
+  panelState.selectedMarkerId = stationMarkerId(station)
+  map.addMarker(
+    panelState.selectedMarkerId,
+    stationMapCoords(station),
+    daqiMarkerOptions(stationDaqi({ station, ...getDaqiContext() }), true)
+  )
+  showStationPanel(station, ctx)
+}
+
+/**
  * Creates the station panel controller, bound to a single map instance.
  * Owns the selected-marker/focus-trigger state and the show/close/highlight
  * behaviour for the station information panel.
@@ -196,101 +300,28 @@ function createStationPanelController({
   getSortedStations,
   getDaqiContext
 }) {
-  const stationPanelElement = document.getElementById('station-panel')
-  const stationFormElement = document.getElementById('sp-station-form')
-
-  /** Tracks the currently highlighted marker and the element to restore focus to on close. */
-  const panelState = { selectedMarkerId: null, panelTrigger: null }
-
-  /**
-   * Populates and shows the station panel for the given station.
-   * @param {{ name?: string, stationStatus?: string, status?: string, siteStatus?: string,
-   *   pollutants?: string[], localAuthority?: string, areaType?: string,
-   *   openDate?: string, closeDate?: string }} station
-   */
-  function showStationPanel(station) {
-    if (!stationPanelElement?.isConnected) {
-      return
-    }
-
-    const status = (
-      station.stationStatus ||
-      station.status ||
-      station.siteStatus ||
-      ''
-    ).toLowerCase()
-    const isClosed = status === 'closed'
-
-    renderStationHeading(station, status, isClosed)
-    renderStationDetails(station, isClosed, getDaqiContext())
-    updateStationLinkForm(station, stationPanelElement, stationFormElement)
-
-    panelState.panelTrigger = document.activeElement
-    stationPanelElement.classList.add('visible')
-    hideKeyOverlay(false)
-    stationPanelElement.focus()
+  const ctx = {
+    map,
+    getSortedStations,
+    getDaqiContext,
+    stationPanelElement: document.getElementById('station-panel'),
+    stationFormElement: document.getElementById('sp-station-form'),
+    /** Tracks the currently highlighted marker and the element to restore focus to on close. */
+    panelState: { selectedMarkerId: null, panelTrigger: null }
   }
 
-  /**
-   * Restores the previously selected marker to its DAQI colour and hides the station panel.
-   */
-  function closeStationPanel() {
-    if (stationPanelElement) {
-      stationPanelElement.classList.remove('visible')
-    }
-    if (panelState.selectedMarkerId) {
-      const prev = getSortedStations().find(
-        (s) => stationMarkerId(s) === panelState.selectedMarkerId
-      )
-      if (prev) {
-        map.addMarker(
-          panelState.selectedMarkerId,
-          stationMapCoords(prev),
-          daqiMarkerOptions(
-            stationDaqi({ station: prev, ...getDaqiContext() }),
-            false
-          )
-        )
-      }
-      panelState.selectedMarkerId = null
-    }
-    if (!keyOverlayState.closedByUser) {
-      showKeyOverlay()
-    }
-    panelState.panelTrigger?.focus()
-    panelState.panelTrigger = null
+  return {
+    showStationPanel(station) {
+      return showStationPanel(station, ctx)
+    },
+    closeStationPanel() {
+      return closeStationPanel(ctx)
+    },
+    highlightStation(station) {
+      return highlightStation(station, ctx)
+    },
+    panelState: ctx.panelState
   }
-
-  /**
-   * Selects a station: restores the previous marker, highlights the new one, and shows the panel.
-   * @param {object} station
-   */
-  function highlightStation(station) {
-    if (panelState.selectedMarkerId) {
-      const prev = getSortedStations().find(
-        (s) => stationMarkerId(s) === panelState.selectedMarkerId
-      )
-      if (prev) {
-        map.addMarker(
-          panelState.selectedMarkerId,
-          stationMapCoords(prev),
-          daqiMarkerOptions(
-            stationDaqi({ station: prev, ...getDaqiContext() }),
-            false
-          )
-        )
-      }
-    }
-    panelState.selectedMarkerId = stationMarkerId(station)
-    map.addMarker(
-      panelState.selectedMarkerId,
-      stationMapCoords(station),
-      daqiMarkerOptions(stationDaqi({ station, ...getDaqiContext() }), true)
-    )
-    showStationPanel(station)
-  }
-
-  return { showStationPanel, closeStationPanel, highlightStation, panelState }
 }
 
 export { createStationPanelController }
