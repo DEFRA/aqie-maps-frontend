@@ -49,9 +49,7 @@ function buildDaqiRow(station, daqiContext) {
   const { mapMode, aurnDataByStation, forecasts, selectedForecastDay } =
     daqiContext
   if (mapMode === 'aurn') {
-    const aurnDaqi = toSafeDaqiIndex(
-      aurnDataByStation.get(station.localSiteID)
-    )
+    const aurnDaqi = toSafeDaqiIndex(aurnDataByStation.get(station.localSiteID))
     if (aurnDaqi == null) {
       return ['DAQI (observed)', NOT_AVAILABLE]
     }
@@ -158,7 +156,11 @@ function renderStationDetails(station, isClosed, daqiContext) {
  * @param {HTMLElement} stationPanelElement
  * @param {HTMLFormElement} stationFormElement
  */
-function updateStationLinkForm(station, stationPanelElement, stationFormElement) {
+function updateStationLinkForm(
+  station,
+  stationPanelElement,
+  stationFormElement
+) {
   const stationLink = document.getElementById('sp-station-link')
   if (!stationLink) {
     return
