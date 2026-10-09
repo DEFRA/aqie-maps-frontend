@@ -1,0 +1,21 @@
+{
+  // $schema provides code completion hints to IDEs.
+  "$schema": "https://github.com/IBM/audit-ci/raw/main/docs/schema.json",
+  "high": true,
+  "allowlist": [
+    {
+      "GHSA-jrc7-96c5-q579": {
+        "active": true,
+        "notes": "MapLibre GL JS XSS sanitizer bypass (fixed in maplibre-gl 6.4.1). Pulled in transitively via @defra/interactive-map, which still pins maplibre-gl ^5.x in its latest release (0.0.53-alpha as of 2026-10-09). No safe upgrade exists until @defra/interactive-map bumps its own maplibre-gl dependency past 6.4.1 (tracked upstream in https://github.com/DEFRA/interactive-map/issues/513, where the maintainer states they believe this doesn't affect them as they don't use MapLibre's AttributionEngine where the bug lives). Our own usage in src/client/javascripts/map.js passes a hardcoded, non-user-controlled attribution string, so no attacker-controlled input reaches this path regardless. Re-review before expiry.",
+        "expiry": "9 November 2026"
+      }
+    },
+    {
+      "GHSA-vfj7-8cjw-p6xm": {
+        "active": true,
+        "notes": "braces stack-exhaustion DoS, no patched version exists upstream (braces latest is 3.0.3, still affected). Cascades through micromatch->fast-glob->globby->stylelint->stylelint-config-* (dev/build tooling, not in prod) and chokidar->nodemon (dev-only) / nunjucks (prod dependency, but chokidar is only invoked via nunjucks.watch, which defaults to false outside development - see src/config/config.js). Re-review before expiry in case an upstream fix lands.",
+        "expiry": "9 November 2026"
+      }
+    }
+  ]
+}
