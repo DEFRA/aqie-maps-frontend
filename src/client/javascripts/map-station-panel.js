@@ -3,7 +3,8 @@ import {
   stationMarkerId,
   stationDaqi,
   forecastForStation,
-  daqiValueForDay
+  daqiValueForDay,
+  hasValidCoords
 } from './map-station-data.js'
 import { daqiBand, daqiMarkerOptions, toSafeDaqiIndex } from './map-daqi.js'
 import {
@@ -168,7 +169,7 @@ function updateStationLinkForm(
   const [lat, lng] = station.location?.coordinates ?? []
   const dataSelectorUrl = stationPanelElement.dataset.dataselectorUrl
   const canLink = Boolean(
-    dataSelectorUrl && lat != null && lng != null && stationFormElement
+    dataSelectorUrl && hasValidCoords(station) && stationFormElement
   )
   if (!canLink) {
     stationLink.hidden = true
