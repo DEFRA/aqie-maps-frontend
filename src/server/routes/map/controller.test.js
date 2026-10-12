@@ -41,3 +41,44 @@ describe('#mapController', () => {
     expect(result).toEqual(expect.stringContaining('id="map"'))
   })
 })
+
+describe('#mapController dataSelectorUrl', () => {
+  afterEach(() => {
+    vi.doUnmock('../../../config/config.js')
+    vi.resetModules()
+  })
+
+  test('Should pass the configured dataSelectorUrl to the view', async () => {
+    vi.resetModules()
+    vi.doMock('../../../config/config.js', () => ({
+      config: {
+        get: () => 'https://aqie-dataselector-frontend.example'
+      }
+    }))
+    const { mapController } = await import('./controller.js')
+    const h = { view: vi.fn() }
+
+    mapController.handler({}, h)
+
+    expect(h.view).toHaveBeenCalledWith('map/index', {
+      pageTitle: 'Air quality map',
+      dataSelectorUrl: 'https://aqie-dataselector-frontend.example'
+    })
+  })
+
+  test('Should pass a null dataSelectorUrl to the view when not configured', async () => {
+    vi.resetModules()
+    vi.doMock('../../../config/config.js', () => ({
+      config: { get: () => null }
+    }))
+    const { mapController } = await import('./controller.js')
+    const h = { view: vi.fn() }
+
+    mapController.handler({}, h)
+
+    expect(h.view).toHaveBeenCalledWith('map/index', {
+      pageTitle: 'Air quality map',
+      dataSelectorUrl: null
+    })
+  })
+})

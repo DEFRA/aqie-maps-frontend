@@ -153,7 +153,7 @@ function resetDom() {
       </button>
     </div>
     <button id="exit-map" type="button">Exit map</button>
-    <div id="station-panel" data-dataselector-url="https://dataselector.example">
+    <div id="station-panel" data-dataselector-url="https://aqie-dataselector-frontend.example">
       <button id="sp-close"></button>
       <h2 id="sp-name"></h2>
       <dl id="sp-details"></dl>
@@ -280,7 +280,7 @@ beforeEach(async () => {
       </button>
     </div>
     <button id="exit-map" type="button">Exit map</button>
-    <div id="station-panel" data-dataselector-url="https://dataselector.example">
+    <div id="station-panel" data-dataselector-url="https://aqie-dataselector-frontend.example">
       <button id="sp-close"></button>
       <h2 id="sp-name"></h2>
       <dl id="sp-details"></dl>
@@ -737,7 +737,9 @@ describe('#station panel', () => {
     const link = document.getElementById('sp-station-link')
     const form = document.getElementById('sp-station-form')
     expect(link.hidden).toBe(false)
-    expect(form.action).toBe('https://dataselector.example/station-summary')
+    expect(form.action).toBe(
+      'https://aqie-dataselector-frontend.example/station-summary'
+    )
     expect(form.elements.lat.value).toBe('51.5')
     expect(form.elements.lng.value).toBe('-0.1')
     expect(form.elements.name.value).toBe('London Test')

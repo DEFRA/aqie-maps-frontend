@@ -63,13 +63,15 @@ describe('#contentSecurityPolicy formAction', () => {
   test('Should add the dataselector origin to form-action when configured', async () => {
     vi.resetModules()
     vi.doMock('../../config/config.js', () => ({
-      config: { get: () => 'https://dataselector.example' }
+      config: {
+        get: () => 'https://aqie-dataselector-frontend.example'
+      }
     }))
     const { contentSecurityPolicy } =
       await import('./content-security-policy.js')
     expect(contentSecurityPolicy.options.formAction).toEqual([
       'self',
-      'https://dataselector.example'
+      'https://aqie-dataselector-frontend.example'
     ])
   })
 })
