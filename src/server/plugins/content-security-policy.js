@@ -1,4 +1,7 @@
 import Blankie from 'blankie'
+import { config } from '../../config/config.js'
+
+const dataSelectorUrl = config.get('dataSelectorFrontEnd.url')
 
 /**
  * Manage content security policies.
@@ -38,7 +41,7 @@ const contentSecurityPolicy = {
     frameSrc: ['self', 'data:'],
     objectSrc: ['none'],
     frameAncestors: ['none'],
-    formAction: ['self'],
+    formAction: dataSelectorUrl ? ['self', dataSelectorUrl] : ['self'],
     manifestSrc: ['self'],
     generateNonces: false
   }

@@ -206,6 +206,15 @@ export const config = convict({
       env: 'AQIE_BACK_END_URL'
     }
   },
+  dataSelectorFrontEnd: {
+    url: {
+      doc: 'Base URL for the AQIE dataselector front-end service, used to link to station summaries',
+      format: String,
+      nullable: true,
+      default: null,
+      env: 'DATASELECTOR_FRONT_END_URL'
+    }
+  },
   aqieForecastApi: {
     url: {
       doc: 'Base URL for the AQIE forecast API service',
