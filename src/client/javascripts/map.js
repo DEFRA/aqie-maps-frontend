@@ -16,9 +16,10 @@ import {
   initFilterPanel,
   filterState
 } from './map-filter-panel.js'
-import { initKeyOverlay, initReopenStack } from './map-key-overlay.js'
 import { createMarkerAccessibility } from './map-marker-accessibility.js'
+import { initMapPanels } from './map-panels.js'
 import { createStationPanelController } from './map-station-panel.js'
+import { initZoomControls } from './map-zoom-controls.js'
 
 const defaultZoom = 5.4842222
 const ukCentreLng = -1.4649
@@ -34,7 +35,10 @@ const CLICK_SELECT_MAX_SQUARED_DEG = 0.01
 
 const map = new defra.InteractiveMap('map', {
   mapProvider: defra.maplibreProvider(),
-  behaviour: 'hybrid',
+  // 'hybrid' hides the map behind a button on mobile
+  behaviour: 'inline',
+  // Zoom buttons are on the page, as the built-in ones are hidden on touch
+  enableZoomControls: false,
   mapLabel: 'United Kingdom',
   zoom: defaultZoom,
   center: [ukCentreLng, ukCentreLat],
@@ -44,6 +48,20 @@ const map = new defra.InteractiveMap('map', {
     attribution: 'OpenFreeMap \u00a9 OpenMapTiles Data from OpenStreetMap',
     backgroundColor: '#f5f5f0'
   }
+})
+
+// Before the data loads, so the panels respond straight away
+initMapPanels({ closeStationPanel: () => closeStationPanel() })
+document.getElementById('exit-map')?.addEventListener('click', () => {
+  history.back()
+})
+map.on('map:ready', ({ map: maplibreMap }) => initZoomControls(maplibreMap))
+
+// Registered before the data loads, as the map can finish rendering first
+const loadState = { mapRendered: false, dataLoaded: false }
+map.on('map:firstidle', () => {
+  loadState.mapRendered = true
+  initMapFeatures()
 })
 
 const sortedStationsByLat = await loadMonitoringStations()
@@ -154,20 +172,21 @@ function initForecastDayControls(onDayChange) {
   })
 }
 
-// Plot all station markers and initialise map UI on first render.
-map.on('map:firstidle', () => {
-  initKeyOverlay()
-  initReopenStack()
+/** Plots the markers and wires up the map UI once the map and the data are ready. */
+function initMapFeatures() {
+  if (!loadState.mapRendered || !loadState.dataLoaded) {
+    return
+  }
   initStationPanelKeyboard()
   initMarkerObserver()
   initMapMouseInteraction()
   plotAllMarkers()
   initFilterPanel(plotAllMarkers)
   initForecastDayControls(plotAllMarkers)
-  document.getElementById('exit-map')?.addEventListener('click', () => {
-    history.back()
-  })
-})
+}
+
+loadState.dataLoaded = true
+initMapFeatures()
 
 // On map click (canvas), find the nearest plotted station within ~11 km (0.1°) and select it.
 // Note: clicking directly on a station marker (DOM overlay) does not fire map:click —
