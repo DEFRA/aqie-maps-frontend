@@ -20,7 +20,6 @@ function buildDom() {
       </div>
       <div id="forecast-day-controls" hidden></div>
     </div>
-    <button id="filter-button" aria-expanded="true"></button>
   `
 }
 
