@@ -383,3 +383,62 @@ describe('#initMapPanels — viewport changes', () => {
     expect(byId('filter-panel').hidden).toBe(false)
   })
 })
+
+describe('#initMapPanels — focus when the viewport changes', () => {
+  test('Should move focus to the Key button when the map key had focus and is closed', () => {
+    stubView(false)
+    startMapPanels()
+    byId('map-key-close').focus()
+    view.changeTo(true)
+    expect(document.activeElement).toBe(byId('key-button'))
+  })
+
+  test('Should move focus to the Key button when the map key itself had focus', () => {
+    stubView(false)
+    startMapPanels()
+    byId('map-key-overlay').focus()
+    view.changeTo(true)
+    expect(document.activeElement).toBe(byId('key-button'))
+  })
+
+  test('Should move focus to the Menu button when the filter panel had focus and is covered by the station panel', () => {
+    stubView(false)
+    startMapPanels()
+    setStationPanelOpen(true)
+    byId('filter-panel-close').focus()
+    view.changeTo(true)
+    expect(document.activeElement).toBe(byId('filter-button'))
+  })
+
+  test('Should keep focus in the filter panel when only the map key is closed', () => {
+    stubView(false)
+    startMapPanels()
+    byId('filter-panel-close').focus()
+    view.changeTo(true)
+    expect(document.activeElement).toBe(byId('filter-panel-close'))
+  })
+
+  test('Should keep focus in the map key when it stays open', () => {
+    stubView(false)
+    startMapPanels()
+    byId('filter-panel-close').click()
+    byId('map-key-close').focus()
+    view.changeTo(true)
+    expect(document.activeElement).toBe(byId('map-key-close'))
+  })
+
+  test('Should not take focus when nothing had focus', () => {
+    stubView(false)
+    startMapPanels()
+    view.changeTo(true)
+    expect(document.activeElement).toBe(document.body)
+  })
+
+  test('Should not move focus when the viewport becomes larger', () => {
+    stubView(true)
+    startMapPanels()
+    byId('filter-panel-close').focus()
+    view.changeTo(false)
+    expect(document.activeElement).toBe(byId('filter-panel-close'))
+  })
+})

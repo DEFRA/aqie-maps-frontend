@@ -90,10 +90,21 @@ function closeMapKey() {
 }
 
 function handleMobileViewChange() {
+  const mapKey = document.getElementById(MAP_KEY_OVERLAY_ID)
+  const filterPanel = document.getElementById(FILTER_PANEL_ID)
+  const mapKeyHadFocus = mapKey?.contains(document.activeElement)
+  const filterPanelHadFocus = filterPanel?.contains(document.activeElement)
+
   if (isMobileView() && panelState.filterPanelOpen && panelState.mapKeyOpen) {
     panelState.mapKeyOpen = false
   }
   updatePanelVisibility()
+
+  if (mapKeyHadFocus && mapKey.hidden) {
+    moveFocusTo(KEY_BUTTON_ID)
+  } else if (filterPanelHadFocus && filterPanel.hidden) {
+    moveFocusTo(FILTER_BUTTON_ID)
+  }
 }
 
 /**
