@@ -10,6 +10,9 @@ $aq-focus-shadow: 0 0 0 2px #ffffff, 0 0 0 5px #0b0c0c, 0 0 0 8px #ffdd00;
 $aq-attribution-clearance: 34px;
 $aq-attribution-overlap-max-width: 51.9375em; // 831px
 
+
+$aq-top-controls-clearance: 150px;
+
 @mixin aq-above-mobile {
   @media (min-width: $aq-mobile-breakpoint) {
     @content;
@@ -24,8 +27,8 @@ $aq-attribution-overlap-max-width: 51.9375em; // 831px
   right: 0;
   z-index: 100;
   box-sizing: border-box;
-  max-height: calc(100vh - 110px);
-  max-height: calc(100dvh - 110px);
+  max-height: calc(100vh - #{$aq-top-controls-clearance});
+  max-height: calc(100dvh - #{$aq-top-controls-clearance});
   overflow-y: auto;
   background-color: #ffffff;
   box-shadow: $aq-panel-shadow;
@@ -233,17 +236,21 @@ $aq-attribution-overlap-max-width: 51.9375em; // 831px
   }
 }
 
-// Not shown on mobile, where users pinch or double-tap
+// Under the Exit button on small screens, where the bottom sheets span the
+// full width
 .aq-map-zoom {
-  display: none;
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  top: 60px;
+  left: 10px;
+  z-index: 3;
 
   @include govuk-media-query($from: tablet) {
-    display: flex;
-    flex-direction: column;
-    position: absolute;
+    top: auto;
+    left: auto;
     right: 10px;
     bottom: $aq-attribution-clearance;
-    z-index: 3;
   }
 }
 
@@ -369,8 +376,8 @@ $aq-attribution-overlap-max-width: 51.9375em; // 831px
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-  max-height: calc(100vh - 110px);
-  max-height: calc(100dvh - 110px);
+  max-height: calc(100vh - #{$aq-top-controls-clearance});
+  max-height: calc(100dvh - #{$aq-top-controls-clearance});
   background-color: #ffffff;
   box-shadow: $aq-panel-shadow;
   overflow: hidden;
