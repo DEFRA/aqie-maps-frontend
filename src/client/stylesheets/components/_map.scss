@@ -10,8 +10,12 @@ $aq-focus-shadow: 0 0 0 2px #ffffff, 0 0 0 5px #0b0c0c, 0 0 0 8px #ffdd00;
 $aq-attribution-clearance: 34px;
 $aq-attribution-overlap-max-width: 51.9375em; // 831px
 
-
+// Space above the mobile bottom sheets for the Exit and zoom buttons
 $aq-top-controls-clearance: 150px;
+
+// Right edge kept clear of the bottom panels for the icon-only Menu and Key
+// buttons (10px + 40px button + 10px)
+$aq-reopen-gutter: 60px;
 
 @mixin aq-above-mobile {
   @media (min-width: $aq-mobile-breakpoint) {
@@ -36,7 +40,7 @@ $aq-top-controls-clearance: 150px;
   @include aq-above-mobile {
     bottom: 10px;
     left: 10px;
-    right: 10px;
+    right: $aq-reopen-gutter;
     max-height: calc(100vh - 20px);
     max-height: calc(100dvh - 20px);
   }
@@ -152,9 +156,14 @@ $aq-top-controls-clearance: 150px;
 
   @include aq-above-mobile {
     top: auto;
-    bottom: $aq-attribution-clearance + 90px;
+    bottom: $aq-attribution-clearance;
     gap: 10px;
     align-items: flex-end;
+  }
+
+  // Above the zoom buttons, which are bottom-right from here
+  @include govuk-media-query($from: tablet) {
+    bottom: $aq-attribution-clearance + 90px;
   }
 }
 
