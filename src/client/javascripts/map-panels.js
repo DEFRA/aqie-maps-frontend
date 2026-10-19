@@ -104,6 +104,8 @@ function handleMobileViewChange() {
     moveFocusTo(KEY_BUTTON_ID)
   } else if (filterPanelHadFocus && filterPanel.hidden) {
     moveFocusTo(FILTER_BUTTON_ID)
+  } else {
+    // No panel had focus or the focused panel is still visible, do nothing
   }
 }
 
