@@ -13,6 +13,9 @@ $aq-attribution-overlap-max-width: 51.9375em; // 831px
 // Space above the mobile bottom sheets for the Exit and zoom buttons
 $aq-top-controls-clearance: 150px;
 
+// Space below the top-right filter panel for the zoom buttons
+$aq-bottom-controls-clearance: 134px;
+
 // Right edge kept clear of the bottom panels for the icon-only Menu and Key
 // buttons (10px + 40px button + 10px)
 $aq-reopen-gutter: 60px;
@@ -401,8 +404,8 @@ $aq-reopen-gutter: 60px;
     left: auto;
     right: 10px;
     width: 454px;
-    max-height: calc(100vh - 20px);
-    max-height: calc(100dvh - 20px);
+    max-height: calc(100vh - 10px - #{$aq-bottom-controls-clearance});
+    max-height: calc(100dvh - 10px - #{$aq-bottom-controls-clearance});
     border: 2px solid #0b0c0c;
     box-shadow: none;
   }
