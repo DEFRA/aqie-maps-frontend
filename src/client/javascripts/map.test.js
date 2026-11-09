@@ -373,7 +373,7 @@ describe('#map initialisation', () => {
     mapReadyCallback()
     // Station should be coloured with DAQI 2 (non-grey) from AURN data
     const call = mockMapInstance.addMarker.mock.calls[0]
-    expect(call[2].symbolSvgContent).toContain('#31ff00')
+    expect(call[2].svgContent).toContain('#31ff00')
   })
 
   test('Should warn and continue when AURN data fetch fails', async () => {
@@ -419,7 +419,10 @@ describe('#monitoring stations', () => {
     expect(mockMapInstance.addMarker).toHaveBeenCalledWith(
       'ms-UKA001',
       [-0.1, 51.5],
-      expect.objectContaining({ viewBox: '0 0 38 38', anchor: [0.5, 0.5] })
+      expect.objectContaining({
+        viewBox: '0 0 38 38',
+        anchor: [0.5, 0.5]
+      })
     )
   })
 
@@ -615,9 +618,9 @@ describe('#DAQI markers', () => {
     async (_, daqiValue, backgroundColour, textColour) => {
       await loadWithForecasts([station], forecastAt(51.5, -0.1, daqiValue))
       const call = mockMapInstance.addMarker.mock.calls[0]
-      expect(call[2].symbolSvgContent).toContain(backgroundColour)
-      expect(call[2].symbolSvgContent).toContain(textColour)
-      expect(call[2].symbolSvgContent).toContain(`>${daqiValue}<`)
+      expect(call[2].svgContent).toContain(backgroundColour)
+      expect(call[2].svgContent).toContain(textColour)
+      expect(call[2].svgContent).toContain(`>${daqiValue}<`)
     }
   )
 
@@ -625,14 +628,14 @@ describe('#DAQI markers', () => {
     // Forecast is > 0.05 degrees away
     await loadWithForecasts([station], forecastAt(52, -0.1, 5))
     const call = mockMapInstance.addMarker.mock.calls[0]
-    expect(call[2].symbolSvgContent).toContain('fill="#777777"')
-    expect(call[2].symbolSvgContent).toContain('stroke="white"')
+    expect(call[2].svgContent).toContain('fill="#777777"')
+    expect(call[2].svgContent).toContain('stroke="white"')
   })
 
   test('Should use grey marker when no forecasts are available', async () => {
     await loadWithForecasts([station], [])
     const call = mockMapInstance.addMarker.mock.calls[0]
-    expect(call[2].symbolSvgContent).toContain('fill="#777777"')
+    expect(call[2].svgContent).toContain('fill="#777777"')
   })
 
   test('Should use dark grey with black stroke for selected station with no DAQI', async () => {
@@ -641,10 +644,10 @@ describe('#DAQI markers', () => {
     const markerCalls = mockMapInstance.addMarker.mock.calls
     const selectedCall = markerCalls.find(
       (call) =>
-        call[0] === 'ms-UKA001' && call[2].symbolSvgContent.includes('#0b0c0c')
+        call[0] === 'ms-UKA001' && call[2].svgContent.includes('#0b0c0c')
     )
     expect(selectedCall).toBeDefined()
-    expect(selectedCall[2].symbolSvgContent).toContain('fill="#555555"')
+    expect(selectedCall[2].svgContent).toContain('fill="#555555"')
   })
 
   test('Should not plot a closed station', async () => {
@@ -664,8 +667,8 @@ describe('#DAQI markers', () => {
     ]
     await loadWithForecasts([station], forecastWithMissingCoords)
     const call = mockMapInstance.addMarker.mock.calls[0]
-    expect(call[2].symbolSvgContent).toContain('#ffff00')
-    expect(call[2].symbolSvgContent).toContain('>4<')
+    expect(call[2].svgContent).toContain('#ffff00')
+    expect(call[2].svgContent).toContain('>4<')
   })
 })
 
@@ -757,7 +760,7 @@ describe('#station panel', () => {
     const markerCalls = mockMapInstance.addMarker.mock.calls
     const selectedCall = markerCalls.find(
       (call) =>
-        call[0] === 'ms-UKA001' && call[2].symbolSvgContent.includes('#0b0c0c')
+        call[0] === 'ms-UKA001' && call[2].svgContent.includes('#0b0c0c')
     )
     expect(selectedCall).toBeDefined()
   })
@@ -774,9 +777,9 @@ describe('#station panel', () => {
     mapClickCallback({ coords: [-2.2, 53.5] })
     // First call restores UKA001 to default style
     expect(mockMapInstance.addMarker.mock.calls[0][0]).toBe('ms-UKA001')
-    expect(
-      mockMapInstance.addMarker.mock.calls[0][2].symbolSvgContent
-    ).toContain('stroke="white"')
+    expect(mockMapInstance.addMarker.mock.calls[0][2].svgContent).toContain(
+      'stroke="white"'
+    )
   })
 
   test('Should not show panel when clicking outside the 0.1 degree radius', async () => {
@@ -803,7 +806,7 @@ describe('#station panel', () => {
       'ms-UKA001',
       expect.any(Array),
       expect.objectContaining({
-        symbolSvgContent: expect.stringContaining('stroke="white"')
+        svgContent: expect.stringContaining('stroke="white"')
       })
     )
   })
@@ -938,7 +941,10 @@ describe('#station panel', () => {
   })
 
   test('Should fall back to the raw code for an unrecognised pollutant', async () => {
-    const stationWithCustom = { ...station, pollutants: ['CUSTOM_CODE'] }
+    const stationWithCustom = {
+      ...station,
+      pollutants: ['NO2', 'CUSTOM_CODE']
+    }
     await loadStationsAndIdle([stationWithCustom])
     mapClickCallback({ coords: [-0.1, 51.5] })
     expect(document.getElementById('sp-details').textContent).toContain(
@@ -1434,7 +1440,7 @@ describe('#map key overlay', () => {
     const markerCalls = mockMapInstance.addMarker.mock.calls
     const selectedCall = markerCalls.find(
       (call) =>
-        call[0] === 'ms-UKA001' && call[2].symbolSvgContent.includes('#0b0c0c')
+        call[0] === 'ms-UKA001' && call[2].svgContent.includes('#0b0c0c')
     )
     expect(selectedCall).toBeDefined()
   })
