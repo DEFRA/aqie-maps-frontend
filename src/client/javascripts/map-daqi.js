@@ -55,7 +55,7 @@ function toSafeDaqiIndex(value) {
  * Falls back to grey when no DAQI value is available.
  * @param {number|null} daqiValue - DAQI index 1–10, or null
  * @param {boolean} selected
- * @returns {{ symbolSvgContent: string, viewBox: string, anchor: [number, number] }}
+ * @returns {{ svgContent: string, viewBox: string, anchor: [number, number] }}
  */
 function daqiMarkerOptions(daqiValue, selected) {
   const daqiIndex = toSafeDaqiIndex(daqiValue)
@@ -80,7 +80,7 @@ function daqiMarkerOptions(daqiValue, selected) {
     '<feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000000" flood-opacity="0.3"/>' +
     '</filter></defs>'
   return {
-    symbolSvgContent: `${shadow}<circle cx="19" cy="19" r="14" fill="${bg}" ${strokeAttr} filter="url(#ds)"/>${label}`,
+    svgContent: `${shadow}<circle cx="19" cy="19" r="14" fill="${bg}" ${strokeAttr} filter="url(#ds)"/>${label}`,
     viewBox: '0 0 38 38',
     anchor: [0.5, 0.5]
   }
