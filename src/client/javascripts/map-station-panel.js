@@ -14,11 +14,7 @@ import {
   pollutantLabels,
   stationStatusTag
 } from './map-utils.js'
-import {
-  hideKeyOverlay,
-  showKeyOverlay,
-  keyOverlayState
-} from './map-key-overlay.js'
+import { setStationPanelOpen } from './map-panels.js'
 
 /**
  * Builds a DAQI tag span for use in the station panel.
@@ -247,7 +243,7 @@ function showStationPanel(
 
   panelState.panelTrigger = document.activeElement
   stationPanelElement.classList.add('visible')
-  hideKeyOverlay(false)
+  setStationPanelOpen(true)
   stationPanelElement.focus()
 }
 
@@ -262,9 +258,7 @@ function closeStationPanel(ctx) {
   }
   restorePreviousMarker(ctx)
   panelState.selectedMarkerId = null
-  if (!keyOverlayState.closedByUser) {
-    showKeyOverlay()
-  }
+  setStationPanelOpen(false)
   panelState.panelTrigger?.focus()
   panelState.panelTrigger = null
 }

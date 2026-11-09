@@ -47,13 +47,13 @@ function stubFetch({ stations = [], forecasts = [] } = {}) {
 function resetDom() {
   document.body.innerHTML = `
     <div id="map"></div>
-    <div id="map-key-overlay" class="aq-map-key" role="region" aria-label="Map key">
-      <button id="map-key-close" class="aq-map-key__close" aria-label="Close map key">
+    <div id="map-key-overlay" class="aq-map-key" role="region" aria-label="Map key" tabindex="-1" hidden>
+      <button id="map-key-close" class="aq-map-key__close" type="button" aria-label="Close map key">
         <span class="govuk-visually-hidden">Close map key</span>
       </button>
       <div class="aq-map-key__body">
-        <h2 class="govuk-heading-s govuk-!-margin-bottom-1">Map key</h2>
-        <p class="govuk-body-s govuk-!-margin-bottom-2">Daily Air Quality Index (DAQI)</p>
+        <h2 class="govuk-heading-m govuk-!-margin-bottom-0">Key</h2>
+        <p class="govuk-hint govuk-!-margin-top-1 govuk-!-margin-bottom-2">Daily Air Quality Index (DAQI)</p>
         <div id="map-key-body">
           <div class="aq-daqi-scale">
             <div class="aq-daqi-scale__bands">
@@ -91,7 +91,7 @@ function resetDom() {
       </div>
     </div>
     <div id="filter-panel" class="aq-filter-panel" role="region" aria-label="Search by pollutant" tabindex="-1">
-      <button id="filter-panel-close" class="aq-filter-panel__close" aria-label="Close filter panel">
+      <button id="filter-panel-close" class="aq-filter-panel__close" type="button" aria-label="Close filter panel">
         <span class="govuk-visually-hidden">Close filter panel</span>
       </button>
       <div class="aq-filter-panel__body">
@@ -136,21 +136,34 @@ function resetDom() {
             </div>
           </div>
           <div id="filter-sections">
-            <details class="govuk-details govuk-!-margin-top-3 govuk-!-margin-bottom-0">
-              <summary class="govuk-details__summary"><span class="govuk-details__summary-text">Data sources</span></summary>
-              <div class="govuk-details__text"><p class="govuk-body-s govuk-!-margin-bottom-0">Automatic Urban and Rural Network (AURN)</p></div>
-            </details>
+            <hr class="govuk-section-break govuk-section-break--visible">
+            <h3 class="govuk-heading-s">Data sources</h3>
+            <div class="govuk-form-group">
+              <fieldset class="govuk-fieldset">
+                <legend class="govuk-fieldset__legend">Near real-time Defra data</legend>
+                <div class="govuk-radios govuk-radios--small">
+                  <div class="govuk-radios__item">
+                    <input class="govuk-radios__input" id="filter-data-source" type="radio" name="filter-data-source" value="aurn" checked>
+                    <label class="govuk-label govuk-radios__label" for="filter-data-source">Automatic Urban and Rural Network</label>
+                  </div>
+                </div>
+              </fieldset>
+            </div>
           </div>
         </div>
       </div>
     </div>
-    <div class="reopen-stack" aria-label="Map actions">
-      <button class="aq-map__menu reopen-btn" id="filter-button" aria-label="Toggle filter panel" aria-expanded="true">
+    <div class="reopen-stack" role="group" aria-label="Map actions">
+      <button class="aq-map__menu reopen-btn" id="filter-button" type="button" aria-label="Open map menu" hidden>
         <span class="reopen-text">Menu</span>
       </button>
-      <button class="aq-map__menu reopen-btn" id="key-button" aria-label="Toggle map key">
+      <button class="aq-map__menu reopen-btn" id="key-button" type="button" aria-label="Open map key">
         <span class="reopen-text">Key</span>
       </button>
+    </div>
+    <div class="aq-map-zoom" role="group" aria-label="Zoom controls">
+      <button id="zoom-in" type="button" aria-label="Zoom in"></button>
+      <button id="zoom-out" type="button" aria-label="Zoom out"></button>
     </div>
     <button id="exit-map" type="button">Exit map</button>
     <div id="station-panel" data-dataselector-url="https://aqie-dataselector-frontend.example">
@@ -171,127 +184,7 @@ beforeEach(async () => {
   mapReadyCallback = null
   mapClickCallback = null
 
-  // Set up DOM elements the map module interacts with
-  document.body.innerHTML = `
-    <div id="map"></div>
-    <div id="map-key-overlay" class="aq-map-key" role="region" aria-label="Map key">
-      <button id="map-key-close" class="aq-map-key__close" aria-label="Close map key">
-        <span class="govuk-visually-hidden">Close map key</span>
-      </button>
-      <div class="aq-map-key__body">
-        <h2 class="govuk-heading-s govuk-!-margin-bottom-1">Map key</h2>
-        <p class="govuk-body-s govuk-!-margin-bottom-2">Daily Air Quality Index (DAQI)</p>
-        <div id="map-key-body">
-          <div class="aq-daqi-scale">
-            <div class="aq-daqi-scale__bands">
-              <div class="aq-daqi-scale__band aq-daqi-scale__band--1">1</div>
-              <div class="aq-daqi-scale__band aq-daqi-scale__band--1">2</div>
-              <div class="aq-daqi-scale__band aq-daqi-scale__band--1">3</div>
-              <div class="aq-daqi-scale__band aq-daqi-scale__band--4">4</div>
-              <div class="aq-daqi-scale__band aq-daqi-scale__band--4">5</div>
-              <div class="aq-daqi-scale__band aq-daqi-scale__band--4">6</div>
-              <div class="aq-daqi-scale__band aq-daqi-scale__band--7">7</div>
-              <div class="aq-daqi-scale__band aq-daqi-scale__band--7">8</div>
-              <div class="aq-daqi-scale__band aq-daqi-scale__band--7">9</div>
-              <div class="aq-daqi-scale__band aq-daqi-scale__band--10">10</div>
-            </div>
-            <div class="aq-daqi-scale__labels">
-              <div class="aq-daqi-scale__label-group aq-daqi-scale__label-group--low">
-                <span class="aq-daqi-scale__level">Low</span>
-                <span class="aq-daqi-scale__range">1 to 3</span>
-              </div>
-              <div class="aq-daqi-scale__label-group aq-daqi-scale__label-group--moderate">
-                <span class="aq-daqi-scale__level">Moderate</span>
-                <span class="aq-daqi-scale__range">4 to 6</span>
-              </div>
-              <div class="aq-daqi-scale__label-group aq-daqi-scale__label-group--high">
-                <span class="aq-daqi-scale__level">High</span>
-                <span class="aq-daqi-scale__range">7 to 9</span>
-              </div>
-              <div class="aq-daqi-scale__label-group aq-daqi-scale__label-group--veryhigh">
-                <span class="aq-daqi-scale__level">Very high</span>
-                <span class="aq-daqi-scale__range">10</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div id="filter-panel" class="aq-filter-panel" role="region" aria-label="Search by pollutant" tabindex="-1">
-      <button id="filter-panel-close" class="aq-filter-panel__close" aria-label="Close filter panel">
-        <span class="govuk-visually-hidden">Close filter panel</span>
-      </button>
-      <div class="aq-filter-panel__body">
-        <p class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-0">Search by pollutant</p>
-        <div class="aq-filter-panel__tabs" role="group" aria-label="Pollutant category">
-          <button class="aq-filter-panel__tab aq-filter-panel__tab--active" id="filter-tab-daqi" aria-pressed="true"><span>DAQI pollutants</span></button>
-          <button class="aq-filter-panel__tab" id="filter-tab-other" aria-pressed="false"><span>Other pollutants</span></button>
-        </div>
-        <div class="aq-filter-panel__scroll">
-          <div id="filter-mount" class="aq-filter-panel__mount">
-            <div id="filter-daqi-content">
-              <div class="govuk-form-group">
-                <fieldset class="govuk-fieldset">
-                  <legend class="govuk-fieldset__legend govuk-visually-hidden">Select pollutants to display on the map</legend>
-                  <div class="govuk-checkboxes govuk-checkboxes--small">
-                    <div class="govuk-checkboxes__item">
-                      <input class="govuk-checkboxes__input" id="filter-pollutant-1" type="checkbox" name="filter-pollutant" value="PM25" checked>
-                      <label class="govuk-label govuk-checkboxes__label" for="filter-pollutant-1">Fine particulate matter (PM2.5)</label>
-                    </div>
-                    <div class="govuk-checkboxes__item">
-                      <input class="govuk-checkboxes__input" id="filter-pollutant-2" type="checkbox" name="filter-pollutant" value="PM10" checked>
-                      <label class="govuk-label govuk-checkboxes__label" for="filter-pollutant-2">Particulate matter (PM10)</label>
-                    </div>
-                    <div class="govuk-checkboxes__item">
-                      <input class="govuk-checkboxes__input" id="filter-pollutant-3" type="checkbox" name="filter-pollutant" value="NO2" checked>
-                      <label class="govuk-label govuk-checkboxes__label" for="filter-pollutant-3">Nitrogen dioxide (NO2)</label>
-                    </div>
-                    <div class="govuk-checkboxes__item">
-                      <input class="govuk-checkboxes__input" id="filter-pollutant-4" type="checkbox" name="filter-pollutant" value="O3" checked>
-                      <label class="govuk-label govuk-checkboxes__label" for="filter-pollutant-4">Ozone (O3)</label>
-                    </div>
-                    <div class="govuk-checkboxes__item">
-                      <input class="govuk-checkboxes__input" id="filter-pollutant-5" type="checkbox" name="filter-pollutant" value="SO2" checked>
-                      <label class="govuk-label govuk-checkboxes__label" for="filter-pollutant-5">Sulphur dioxide (SO2)</label>
-                    </div>
-                  </div>
-                </fieldset>
-              </div>
-            </div>
-            <div id="filter-other-content" hidden>
-              <p class="govuk-body-s govuk-!-margin-top-2">Other pollutant networks are not yet available.</p>
-            </div>
-          </div>
-          <div id="filter-sections">
-            <details class="govuk-details govuk-!-margin-top-3 govuk-!-margin-bottom-0">
-              <summary class="govuk-details__summary"><span class="govuk-details__summary-text">Data sources</span></summary>
-              <div class="govuk-details__text"><p class="govuk-body-s govuk-!-margin-bottom-0">Automatic Urban and Rural Network (AURN)</p></div>
-            </details>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="reopen-stack" aria-label="Map actions">
-      <button class="aq-map__menu reopen-btn" id="filter-button" aria-label="Toggle filter panel" aria-expanded="true">
-        <span class="reopen-text">Menu</span>
-      </button>
-      <button class="aq-map__menu reopen-btn" id="key-button" aria-label="Toggle map key">
-        <span class="reopen-text">Key</span>
-      </button>
-    </div>
-    <button id="exit-map" type="button">Exit map</button>
-    <div id="station-panel" data-dataselector-url="https://aqie-dataselector-frontend.example">
-      <button id="sp-close"></button>
-      <h2 id="sp-name"></h2>
-      <dl id="sp-details"></dl>
-      <form id="sp-station-form">
-        <input name="lat">
-        <input name="lng">
-        <input name="name">
-      </form>
-      <a id="sp-station-link" hidden></a>
-    </div>
-  `
+  resetDom()
 
   mockMapInstance = {
     on: vi.fn((event, cb) => {
@@ -355,11 +248,88 @@ describe('#map initialisation', () => {
     )
   })
 
+  test('Should render the map inline so it is not hidden behind an open-map button on small screens', () => {
+    expect(InteractiveMap).toHaveBeenCalledWith(
+      'map',
+      expect.objectContaining({
+        behaviour: 'inline'
+      })
+    )
+  })
+
   test('Should register a map:firstidle event listener', () => {
     expect(mockMapInstance.on).toHaveBeenCalledWith(
       'map:firstidle',
       expect.any(Function)
     )
+  })
+
+  describe('plotting markers', () => {
+    const station = {
+      localSiteID: 'UKA001',
+      name: 'London Test',
+      stationStatus: 'current',
+      pollutants: ['NO2'],
+      location: { coordinates: [51.5, -0.1] }
+    }
+
+    // Holds back the stations response until releaseStations is called
+    function stubSlowStations() {
+      let releaseStations
+      const stationsReleased = new Promise((resolve) => {
+        releaseStations = resolve
+      })
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async (url) => {
+          if (url === '/api/monitoring-stations') {
+            await stationsReleased
+            return { ok: true, json: async () => ({ stations: [station] }) }
+          }
+          return { ok: true, json: async () => ({ measurements: [] }) }
+        })
+      )
+      return releaseStations
+    }
+
+    async function importMapWhileStationsLoad() {
+      resetDom()
+      mapReadyCallback = null
+      const releaseStations = stubSlowStations()
+      vi.resetModules()
+      const mapImport = import('./map.js')
+      await vi.waitFor(() => expect(mapReadyCallback).not.toBeNull())
+      return { mapImport, releaseStations }
+    }
+
+    test('Should plot the markers when the map renders before the data has loaded', async () => {
+      const { mapImport, releaseStations } = await importMapWhileStationsLoad()
+      mapReadyCallback()
+      releaseStations()
+      await mapImport
+      expect(mockMapInstance.addMarker).toHaveBeenCalledWith(
+        'ms-UKA001',
+        expect.any(Array),
+        expect.any(Object)
+      )
+    })
+
+    test('Should not plot the markers until the map has rendered', async () => {
+      const { mapImport, releaseStations } = await importMapWhileStationsLoad()
+      releaseStations()
+      await mapImport
+      expect(mockMapInstance.addMarker).not.toHaveBeenCalled()
+      mapReadyCallback()
+      expect(mockMapInstance.addMarker).toHaveBeenCalledOnce()
+    })
+
+    test('Should plot the markers once when the map renders before the data has loaded', async () => {
+      const { mapImport, releaseStations } = await importMapWhileStationsLoad()
+      mapReadyCallback()
+      releaseStations()
+      await mapImport
+      expect(mockMapInstance.addMarker).toHaveBeenCalledOnce()
+    })
   })
 
   test('Should fetch monitoring stations on load', () => {
@@ -1379,7 +1349,7 @@ describe('#map key overlay', () => {
     await loadAndIdle()
     const overlay = document.getElementById('map-key-overlay')
     expect(overlay.querySelector('#map-key-close')).toBeDefined()
-    expect(overlay.textContent).toContain('Map key')
+    expect(overlay.querySelector('h2').textContent).toBe('Key')
     expect(overlay.textContent).toContain('DAQI')
   })
 
@@ -1399,28 +1369,55 @@ describe('#map key overlay', () => {
     expect(overlay.hidden).toBe(true)
   })
 
-  test('Should initialise key toggle button in reopen stack', async () => {
+  test('Should initialise the Key reopen button in the reopen stack', async () => {
     await loadAndIdle()
     expect(document.getElementById('key-button')).not.toBeNull()
     expect(document.querySelector('.reopen-stack').textContent).toContain('Key')
   })
 
-  test('Should hide key overlay via key button when it is visible', async () => {
+  test('Should show the key overlay and hide the Key button when the page loads', async () => {
     await loadAndIdle()
-    const overlay = document.getElementById('map-key-overlay')
-    expect(overlay.hidden).toBe(false)
-    document.getElementById('key-button').click()
-    expect(overlay.hidden).toBe(true)
+    expect(document.getElementById('map-key-overlay').hidden).toBe(false)
+    expect(document.getElementById('key-button').hidden).toBe(true)
   })
 
-  test('Should show key overlay via key button when it is hidden', async () => {
+  test('Should show the Key button once the map key has been closed', async () => {
     await loadAndIdle()
-    const overlay = document.getElementById('map-key-overlay')
-    overlay.hidden = true
-    document.getElementById('key-button').click()
-    expect(overlay.hidden).toBe(false)
+    document.getElementById('map-key-close').click()
+    expect(document.getElementById('key-button').hidden).toBe(false)
   })
 
+  test('Should move focus to the Key button when the map key is closed', async () => {
+    await loadAndIdle()
+    document.getElementById('map-key-close').click()
+    expect(document.activeElement).toBe(document.getElementById('key-button'))
+  })
+
+  test('Should reopen the map key and hide the Key button when the Key button is clicked', async () => {
+    await loadAndIdle()
+    document.getElementById('map-key-close').click()
+    document.getElementById('key-button').click()
+    expect(document.getElementById('map-key-overlay').hidden).toBe(false)
+    expect(document.getElementById('key-button').hidden).toBe(true)
+  })
+
+  test('Should move focus to the map key when it is reopened', async () => {
+    await loadAndIdle()
+    document.getElementById('map-key-close').click()
+    document.getElementById('key-button').click()
+    expect(document.activeElement).toBe(
+      document.getElementById('map-key-overlay')
+    )
+  })
+
+  test('Should respond to the map key close button before the map has finished its first render', async () => {
+    resetDom()
+    stubFetch()
+    vi.resetModules()
+    await import('./map.js')
+    document.getElementById('map-key-close').click()
+    expect(document.getElementById('map-key-overlay').hidden).toBe(true)
+  })
   test('Should expose globalThis.navigateToStation', async () => {
     const station = {
       localSiteID: 'UKA001',
@@ -1450,21 +1447,6 @@ describe('#map key overlay', () => {
     document.getElementById('exit-map').click()
     expect(backSpy.mock.results[0].value.back).toHaveBeenCalledOnce()
     backSpy.mockRestore()
-  })
-
-  test('Should set aria-expanded to false on key-button when the overlay is hidden', async () => {
-    await loadAndIdle()
-    const keyBtn = document.getElementById('key-button')
-    document.getElementById('key-button').click()
-    expect(keyBtn.getAttribute('aria-expanded')).toBe('false')
-  })
-
-  test('Should set aria-expanded to true on key-button when the overlay is shown', async () => {
-    await loadAndIdle()
-    const keyBtn = document.getElementById('key-button')
-    document.getElementById('key-button').click()
-    document.getElementById('key-button').click()
-    expect(keyBtn.getAttribute('aria-expanded')).toBe('true')
   })
 })
 
@@ -1499,27 +1481,35 @@ describe('#filter panel', () => {
     )
   })
 
-  test('Should hide filter panel when close button clicked', async () => {
+  test('Should hide filter panel and show the Menu button when close button clicked', async () => {
+    await loadAndIdleWithFilter()
+    const panel = document.getElementById('filter-panel')
+    const menuBtn = document.getElementById('filter-button')
+    expect(menuBtn.hidden).toBe(true)
+    document.getElementById('filter-panel-close').click()
+    expect(panel.hidden).toBe(true)
+    expect(menuBtn.hidden).toBe(false)
+    expect(document.activeElement).toBe(menuBtn)
+  })
+
+  test('Should reopen the filter panel and hide the Menu button when the Menu button is clicked', async () => {
     await loadAndIdleWithFilter()
     const panel = document.getElementById('filter-panel')
     const menuBtn = document.getElementById('filter-button')
     document.getElementById('filter-panel-close').click()
-    expect(panel.hidden).toBe(true)
-    expect(menuBtn.getAttribute('aria-expanded')).toBe('false')
-  })
-
-  test('Should toggle filter panel open and closed with Menu button', async () => {
-    await loadAndIdleWithFilter()
-    const panel = document.getElementById('filter-panel')
-    const menuBtn = document.getElementById('filter-button')
-    // First click — closes
-    menuBtn.click()
-    expect(panel.hidden).toBe(true)
-    expect(menuBtn.getAttribute('aria-expanded')).toBe('false')
-    // Second click — reopens
     menuBtn.click()
     expect(panel.hidden).toBe(false)
-    expect(menuBtn.getAttribute('aria-expanded')).toBe('true')
+    expect(menuBtn.hidden).toBe(true)
+    expect(document.activeElement).toBe(panel)
+  })
+
+  test('Should respond to the filter panel close button before the map has finished its first render', async () => {
+    resetDom()
+    stubFetch()
+    vi.resetModules()
+    await import('./map.js')
+    document.getElementById('filter-panel-close').click()
+    expect(document.getElementById('filter-panel').hidden).toBe(true)
   })
 
   test('Should switch to Other pollutants tab when clicked', async () => {
@@ -1774,5 +1764,82 @@ describe('#filter panel', () => {
     vi.resetModules()
     await import('./map.js')
     expect(() => mapReadyCallback()).not.toThrow()
+  })
+})
+
+// Behaviour is unit tested in map-panels.test.js and map-zoom-controls.test.js.
+// These check that map.js wires them up.
+describe('#map panels and zoom controls', () => {
+  const station = {
+    localSiteID: 'UKA001',
+    name: 'London Test',
+    stationStatus: 'current',
+    pollutants: ['NO2'],
+    location: { coordinates: [51.5, -0.1] }
+  }
+
+  function byId(id) {
+    return document.getElementById(id)
+  }
+
+  function stubMobileView() {
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn(() => ({ matches: true, addEventListener: vi.fn() }))
+    )
+  }
+
+  function mapReady(maplibreMap) {
+    const [, onMapReady] = mockMapInstance.on.mock.calls.find(
+      ([event]) => event === 'map:ready'
+    )
+    onMapReady({ map: maplibreMap })
+  }
+
+  afterEach(() => {
+    delete globalThis.matchMedia
+  })
+
+  test('Should turn off the built-in zoom buttons in favour of the page controls', () => {
+    expect(InteractiveMap).toHaveBeenCalledWith(
+      'map',
+      expect.objectContaining({ enableZoomControls: false })
+    )
+  })
+
+  test('Should zoom the map in when the zoom in button is clicked once the map is ready', () => {
+    const maplibreMap = {
+      zoomIn: vi.fn(),
+      zoomOut: vi.fn(),
+      getZoom: vi.fn(() => 6),
+      getMinZoom: vi.fn(() => 0),
+      getMaxZoom: vi.fn(() => 16),
+      on: vi.fn()
+    }
+    mapReady(maplibreMap)
+    byId('zoom-in').click()
+    expect(maplibreMap.zoomIn).toHaveBeenCalledOnce()
+  })
+
+  test('Should start with the map key open on a larger screen', async () => {
+    await loadStationsAndIdle([station])
+    expect(byId('map-key-overlay').hidden).toBe(false)
+    expect(byId('key-button').hidden).toBe(true)
+  })
+
+  test('Should start with the map key closed on mobile', async () => {
+    stubMobileView()
+    await loadStationsAndIdle([station])
+    expect(byId('map-key-overlay').hidden).toBe(true)
+    expect(byId('key-button').hidden).toBe(false)
+  })
+
+  test('Should close the station panel when the Key button is clicked on mobile', async () => {
+    stubMobileView()
+    await loadStationsAndIdle([station])
+    mapClickCallback({ coords: [-0.1, 51.5] })
+    byId('key-button').click()
+    expect(byId('station-panel').classList.contains('visible')).toBe(false)
+    expect(byId('map-key-overlay').hidden).toBe(false)
   })
 })

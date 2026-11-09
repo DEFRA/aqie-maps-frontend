@@ -49,50 +49,6 @@ function stationMatchesFilter(station) {
 }
 
 /**
- * Wires up the filter panel tabs, checkboxes and open/close behaviour.
- * The HTML for the panel content is pre-rendered server-side by Nunjucks;
- * this function only shows, hides and reads DOM state.
- * @param {Function} onFilterChange - called to re-plot markers when the filter changes
- */
-/**
- * Collapses the filter panel and updates the toggle button state.
- * @param {HTMLElement} panel
- * @param {HTMLElement} reopenBtn
- */
-function closeFilterPanel(panel, reopenBtn) {
-  panel.hidden = true
-  reopenBtn.setAttribute('aria-expanded', 'false')
-  reopenBtn.focus()
-}
-
-/**
- * Expands the filter panel and updates the toggle button state.
- * @param {HTMLElement} panel
- * @param {HTMLElement} reopenBtn
- */
-function openFilterPanel(panel, reopenBtn) {
-  panel.hidden = false
-  reopenBtn.setAttribute('aria-expanded', 'true')
-  panel.focus()
-}
-
-/**
- * Wires up the panel open/close button behaviour.
- */
-function initPanelOpenClose(panel, reopenBtn) {
-  document
-    .getElementById('filter-panel-close')
-    .addEventListener('click', () => closeFilterPanel(panel, reopenBtn))
-  reopenBtn?.addEventListener('click', () => {
-    if (panel.hidden) {
-      openFilterPanel(panel, reopenBtn)
-    } else {
-      closeFilterPanel(panel, reopenBtn)
-    }
-  })
-}
-
-/**
  * Wires up the Monitoring stations / Forecast map type toggle.
  */
 function initMapTypeToggle(
@@ -192,7 +148,8 @@ function initPollutantCheckboxes(onFilterChange) {
 }
 
 /**
- * Wires up the filter panel tabs, checkboxes and open/close behaviour.
+ * Wires up the filter panel tabs and checkboxes. Opening and closing the
+ * panel is handled by map-panels.js.
  * The HTML for the panel content is pre-rendered server-side by Nunjucks;
  * this function only shows, hides and reads DOM state.
  * @param {Function} onFilterChange - called to re-plot markers when the filter changes
@@ -202,8 +159,6 @@ function initFilterPanel(onFilterChange) {
   if (!panel) {
     return
   }
-  const reopenBtn = document.getElementById('filter-button')
-  initPanelOpenClose(panel, reopenBtn)
   initMapTypeToggle(
     document.getElementById('map-type-aurn'),
     document.getElementById('map-type-forecast'),
