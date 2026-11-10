@@ -790,6 +790,46 @@ describe('#station panel', () => {
     ).toBe(false)
   })
 
+  describe('pixel-based click selection', () => {
+    const panelVisible = () =>
+      document.getElementById('station-panel').classList.contains('visible')
+
+    async function loadWithProjection(stations, projected) {
+      await loadStationsAndIdle(stations)
+      const [, onMapReady] = mockMapInstance.on.mock.calls.findLast(
+        ([event]) => event === 'map:ready'
+      )
+      onMapReady({
+        map: {
+          project: vi.fn(() => projected),
+          getZoom: vi.fn(() => 6),
+          getMinZoom: vi.fn(() => 0),
+          getMaxZoom: vi.fn(() => 16),
+          on: vi.fn()
+        }
+      })
+    }
+
+    test('Should select a station when the click is within the pixel radius', async () => {
+      await loadWithProjection([station], { x: 100, y: 100 })
+      mapClickCallback({ coords: [5, 60], point: { x: 110, y: 110 } })
+      expect(panelVisible()).toBe(true)
+    })
+
+    test('Should not select a station when the click is beyond the pixel radius', async () => {
+      await loadWithProjection([station], { x: 100, y: 100 })
+      mapClickCallback({ coords: [-0.1, 51.5], point: { x: 150, y: 100 } })
+      expect(panelVisible()).toBe(false)
+    })
+
+    test('Should not select a station hidden by the pollutant filter', async () => {
+      const hidden = { ...station, pollutants: ['NOT_SELECTED'] }
+      await loadWithProjection([hidden], { x: 100, y: 100 })
+      mapClickCallback({ coords: [-0.1, 51.5], point: { x: 100, y: 100 } })
+      expect(panelVisible()).toBe(false)
+    })
+  })
+
   test('Should hide panel and restore marker when close button is clicked', async () => {
     await loadStationsAndIdle([station])
     mapClickCallback({ coords: [-0.1, 51.5] })
