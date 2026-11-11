@@ -30,8 +30,13 @@ const TAB_ACTIVE_CLASS = 'aq-filter-panel__tab--active'
 
 const DAY_ABBR = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
-// Maximum squared distance (degrees²) for a map click to select a station (~11 km at mid zoom).
+// Fallback when the map isn't ready: max squared distance (degrees²) for a click to select a station.
 const CLICK_SELECT_MAX_SQUARED_DEG = 0.01
+
+// Max on-screen distance (px) from a marker centre for a click to select it (marker radius is 14px).
+const CLICK_SELECT_MAX_PX = 20
+
+let maplibreInstance = null
 
 const map = new defra.InteractiveMap('map', {
   mapProvider: defra.maplibreProvider(),
@@ -55,7 +60,10 @@ initMapPanels({ closeStationPanel: () => closeStationPanel() })
 document.getElementById('exit-map')?.addEventListener('click', () => {
   history.back()
 })
-map.on('map:ready', ({ map: maplibreMap }) => initZoomControls(maplibreMap))
+map.on('map:ready', ({ map: maplibreMap }) => {
+  maplibreInstance = maplibreMap
+  initZoomControls(maplibreMap)
+})
 
 // Registered before the data loads, as the map can finish rendering first
 const loadState = { mapRendered: false, dataLoaded: false }
@@ -188,30 +196,54 @@ function initMapFeatures() {
 loadState.dataLoaded = true
 initMapFeatures()
 
-// On map click (canvas), find the nearest plotted station within ~11 km (0.1°) and select it.
+/**
+ * Squared distance between a click and a station, in screen pixels when the map is
+ * available (so the target is the same size at every zoom), otherwise in degrees.
+ * @returns {{ squaredDist: number, maxSquaredDist: number }}
+ */
+function clickDistance(station, evt) {
+  const lat = Number.parseFloat(station.location.coordinates[0])
+  const lng = Number.parseFloat(station.location.coordinates[1])
+  if (maplibreInstance && evt.point) {
+    const { x, y } = maplibreInstance.project([lng, lat])
+    return {
+      squaredDist: (x - evt.point.x) ** 2 + (y - evt.point.y) ** 2,
+      maxSquaredDist: CLICK_SELECT_MAX_PX ** 2
+    }
+  }
+  const [clickLng, clickLat] = evt.coords
+  return {
+    squaredDist: (lng - clickLng) ** 2 + (lat - clickLat) ** 2,
+    maxSquaredDist: CLICK_SELECT_MAX_SQUARED_DEG
+  }
+}
+
+// On map click (canvas), select the nearest plotted station within a marker-sized distance.
 // Note: clicking directly on a station marker (DOM overlay) does not fire map:click —
 // that case is handled by the keyboard/marker listeners in map-marker-accessibility.js.
 map.on('map:click', (evt) => {
   if (!evt?.coords) {
     return
   }
-  const [clickLng, clickLat] = evt.coords
   let best = null
   let bestDist = Infinity
+  let bestMax = 0
   sortedStationsByLat.forEach((station) => {
-    if (!hasValidCoords(station) || !isActiveStation(station)) {
+    if (
+      !hasValidCoords(station) ||
+      !isActiveStation(station) ||
+      !stationMatchesFilter(station)
+    ) {
       return
     }
-    const lat = Number.parseFloat(station.location.coordinates[0])
-    const lng = Number.parseFloat(station.location.coordinates[1])
-    const squaredDist = (lng - clickLng) ** 2 + (lat - clickLat) ** 2
+    const { squaredDist, maxSquaredDist } = clickDistance(station, evt)
     if (squaredDist < bestDist) {
       bestDist = squaredDist
+      bestMax = maxSquaredDist
       best = station
     }
   })
-  // sqrt(CLICK_SELECT_MAX_SQUARED_DEG) ≈ 0.1 degrees ≈ 11 km — reasonable click target at mid zoom
-  if (best && bestDist < CLICK_SELECT_MAX_SQUARED_DEG) {
+  if (best && bestDist < bestMax) {
     highlightStation(best)
   }
 })

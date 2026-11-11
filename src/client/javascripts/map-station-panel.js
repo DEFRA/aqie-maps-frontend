@@ -23,9 +23,8 @@ import { setStationPanelOpen } from './map-panels.js'
  */
 function buildDaqiTag(daqiValue) {
   const band = daqiBand[daqiValue] || ''
-  const bandKey = band.toLowerCase().replaceAll(' ', '')
-  const daqiClass = bandKey
-    ? `aq-daqi-tag aq-daqi-tag--${bandKey}`
+  const daqiClass = band
+    ? `aq-daqi-tag aq-daqi-tag--${daqiValue}`
     : 'aq-daqi-tag'
   const bandSuffix = band ? ` (${band.toLowerCase()})` : ''
 
