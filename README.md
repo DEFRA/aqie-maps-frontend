@@ -63,7 +63,7 @@ Selecting a station opens a panel that shows:
 A **filter panel** lets you restrict which stations are shown on the map by pollutant type. There are two tabs:
 
 - **DAQI pollutants** — checkboxes for the five primary DAQI pollutants: Fine particulate matter (PM2.5), Particulate matter (PM10), Nitrogen dioxide (NO₂), Ozone (O₃), and Sulphur dioxide (SO₂). All five are selected by default. Unchecking a pollutant hides any station that monitors _only_ that pollutant — stations monitoring at least one still-selected pollutant remain visible.
-- **Other pollutants** — reserved for non-DAQI monitoring networks (not yet available).
+- **Other pollutants** — we will add more pollutants and data sources during 2026.
 
 ### Station list
 
