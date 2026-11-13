@@ -14,12 +14,14 @@ import {
   stationMatchesFilter,
   isActiveStation,
   initFilterPanel,
+  applyFilterState,
   filterState
 } from './map-filter-panel.js'
 import { createMarkerAccessibility } from './map-marker-accessibility.js'
 import { initMapPanels } from './map-panels.js'
 import { createStationPanelController } from './map-station-panel.js'
 import { initZoomControls } from './map-zoom-controls.js'
+import { restoreMapViewState, saveMapViewState } from './map-view-state.js'
 
 const defaultZoom = 5.4842222
 const ukCentreLng = -1.4649
@@ -38,6 +40,9 @@ const CLICK_SELECT_MAX_PX = 20
 
 let maplibreInstance = null
 
+// Present only when the user is returning from a station page
+const restoredView = restoreMapViewState()
+
 const map = new defra.InteractiveMap('map', {
   mapProvider: defra.maplibreProvider(),
   // 'hybrid' hides the map behind a button on mobile
@@ -45,8 +50,8 @@ const map = new defra.InteractiveMap('map', {
   // Zoom buttons are on the page, as the built-in ones are hidden on touch
   enableZoomControls: false,
   mapLabel: 'United Kingdom',
-  zoom: defaultZoom,
-  center: [ukCentreLng, ukCentreLat],
+  zoom: restoredView?.zoom ?? defaultZoom,
+  center: restoredView?.center ?? [ukCentreLng, ukCentreLat],
   containerHeight: '100%',
   mapStyle: {
     url: 'https://tiles.openfreemap.org/styles/liberty',
@@ -78,6 +83,12 @@ const aurnDataByStation = await loadAurnData()
 
 /** The currently selected forecast day abbreviation (e.g. 'Mon'). Defaults to today. */
 let selectedForecastDay = DAY_ABBR[new Date().getDay()]
+const restoredForecastDay = forecasts[0]?.forecast?.find(
+  (f) => f.day === restoredView?.forecastDay
+)?.day
+if (restoredForecastDay) {
+  selectedForecastDay = restoredForecastDay
+}
 
 /**
  * Returns the current DAQI lookup context (mode, observed data, forecasts, selected day).
@@ -188,9 +199,43 @@ function initMapFeatures() {
   initStationPanelKeyboard()
   initMarkerObserver()
   initMapMouseInteraction()
+  applyFilterState(restoredView?.filters)
   plotAllMarkers()
   initFilterPanel(plotAllMarkers)
   initForecastDayControls(plotAllMarkers)
+  reselectRestoredStation()
+}
+
+/** Reopens the station that was selected before the user left for its station page. */
+function reselectRestoredStation() {
+  const id = restoredView?.selectedStationId
+  const station = id
+    ? sortedStationsByLat.find(
+        (s) => hasValidCoords(s) && stationMarkerId(s) === id
+      )
+    : null
+  if (station && stationMatchesFilter(station)) {
+    highlightStation(station)
+  }
+}
+
+/** Saves the current view so it can be restored when the user returns from the station page. */
+function saveCurrentView() {
+  const state = {
+    filters: {
+      mode: filterState.mode,
+      mapMode: filterState.mapMode,
+      selected: [...filterState.selected]
+    },
+    forecastDay: selectedForecastDay,
+    selectedStationId: panelState.selectedMarkerId ?? undefined
+  }
+  if (maplibreInstance) {
+    const { lng, lat } = maplibreInstance.getCenter()
+    state.zoom = maplibreInstance.getZoom()
+    state.center = [lng, lat]
+  }
+  saveMapViewState(state)
 }
 
 loadState.dataLoaded = true
@@ -267,6 +312,7 @@ document
   .getElementById('sp-station-link')
   ?.addEventListener('click', (event) => {
     event.preventDefault()
+    saveCurrentView()
     document.getElementById('sp-station-form')?.submit()
   })
 

@@ -58,6 +58,8 @@ Selecting a station opens a panel that shows:
 - **Pollutants monitored** — a list of the pollutants measured at that station (e.g. NO₂, O₃, SO₂, PM2.5, PM10).
 - **Forecast data** — the DAQI forecast matched to the station's location.
 
+When you follow **View full station summary**, the station page opens in the same window. The map saves its view (zoom, position, filters, forecast day and selected station) in `sessionStorage` just before you leave, and restores it once when you return, so you land back where you were. Nothing is put in the URL. A saved view is used only once and expires after 30 minutes; if it is missing or invalid the map opens at the default UK view.
+
 ### Pollutant filter panel
 
 A **filter panel** lets you restrict which stations are shown on the map by pollutant type. There are two tabs:
