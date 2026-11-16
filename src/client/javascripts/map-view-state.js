@@ -6,8 +6,11 @@
 
 const STORAGE_KEY = 'aqie-map-view-state'
 
+const MS_PER_MINUTE = 60_000
+
 // A saved view older than this is ignored, so a stale entry can't affect a later visit.
-const MAX_AGE_MS = 30 * 60 * 1000
+const MAX_AGE_MINUTES = 30
+const MAX_AGE_MS = MAX_AGE_MINUTES * MS_PER_MINUTE
 
 const MIN_ZOOM = 0
 const MAX_ZOOM = 24
@@ -32,6 +35,11 @@ const STATION_ID_PREFIX = 'ms-'
 
 function isFiniteNumber(value) {
   return typeof value === 'number' && Number.isFinite(value)
+}
+
+function sanitiseZoom(zoom) {
+  const valid = isFiniteNumber(zoom) && zoom >= MIN_ZOOM && zoom <= MAX_ZOOM
+  return valid ? zoom : undefined
 }
 
 function sanitiseCenter(center) {
@@ -85,12 +93,9 @@ function sanitiseState(raw) {
     return null
   }
   const clean = {}
-  if (
-    isFiniteNumber(raw.zoom) &&
-    raw.zoom >= MIN_ZOOM &&
-    raw.zoom <= MAX_ZOOM
-  ) {
-    clean.zoom = raw.zoom
+  const zoom = sanitiseZoom(raw.zoom)
+  if (zoom !== undefined) {
+    clean.zoom = zoom
   }
   const center = sanitiseCenter(raw.center)
   if (center) {
