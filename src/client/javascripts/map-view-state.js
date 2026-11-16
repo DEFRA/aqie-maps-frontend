@@ -153,4 +153,25 @@ function restoreMapViewState() {
   }
 }
 
-export { saveMapViewState, restoreMapViewState }
+/**
+ * Returns the map view for the dataselector's "View map of nearby monitoring
+ * stations" link (centred on the station, station selected), or null when the
+ * page wasn't opened that way. The server renders it into the map element's
+ * data-nearby-stations-view; it is sanitised like a saved view. Resets the
+ * address bar to /map so a refresh is a plain GET rather than a re-POST.
+ * @returns {MapViewState | null}
+ */
+function readNearbyStationsView() {
+  const raw = document.getElementById('map')?.dataset.nearbyStationsView
+  if (!raw) {
+    return null
+  }
+  window.history.replaceState(null, '', '/map')
+  try {
+    return sanitiseState(JSON.parse(raw))
+  } catch {
+    return null
+  }
+}
+
+export { saveMapViewState, restoreMapViewState, readNearbyStationsView }

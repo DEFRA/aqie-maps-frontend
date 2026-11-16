@@ -1,6 +1,10 @@
 // @vitest-environment jsdom
 import { vi, beforeEach, afterEach, describe, test, expect } from 'vitest'
-import { saveMapViewState, restoreMapViewState } from './map-view-state.js'
+import {
+  saveMapViewState,
+  restoreMapViewState,
+  readNearbyStationsView
+} from './map-view-state.js'
 
 const STORAGE_KEY = 'aqie-map-view-state'
 
@@ -105,5 +109,50 @@ describe('map-view-state', () => {
       throw new Error('blocked')
     })
     expect(restoreMapViewState()).toBeNull()
+  })
+})
+
+describe('readNearbyStationsView', () => {
+  afterEach(() => {
+    document.body.innerHTML = ''
+    vi.restoreAllMocks()
+  })
+
+  function renderMap(nearbyStationsView) {
+    const map = document.createElement('div')
+    map.id = 'map'
+    if (nearbyStationsView !== undefined) {
+      map.dataset.nearbyStationsView = nearbyStationsView
+    }
+    document.body.appendChild(map)
+  }
+
+  test('Should return null when the page was not opened from nearby stations', () => {
+    renderMap()
+    expect(readNearbyStationsView()).toBeNull()
+  })
+
+  test('Should return the sanitised nearby stations view and reset the URL to /map', () => {
+    const replaceState = vi.spyOn(window.history, 'replaceState')
+    renderMap(
+      JSON.stringify({
+        center: [-1.875, 52.476],
+        zoom: 11,
+        selectedStationId: 'ms-BIRR',
+        unexpected: 'x'
+      })
+    )
+
+    expect(readNearbyStationsView()).toEqual({
+      center: [-1.875, 52.476],
+      zoom: 11,
+      selectedStationId: 'ms-BIRR'
+    })
+    expect(replaceState).toHaveBeenCalledWith(null, '', '/map')
+  })
+
+  test('Should return null for malformed JSON', () => {
+    renderMap('{not json')
+    expect(readNearbyStationsView()).toBeNull()
   })
 })
