@@ -13,7 +13,7 @@
       </svg>
       <span>Exit map</span>
     </button>
-    <div id="map"></div>
+    <div id="map"{% if nearbyStationsView %} data-nearby-stations-view="{{ nearbyStationsView | dump }}"{% endif %}></div>
     <div id="map-key-overlay" class="aq-map-key" role="region" aria-label="Map key" tabindex="-1" hidden>
       <button id="map-key-close" class="aq-map-key__close" type="button" aria-label="Close map key">
         <svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 20 20">

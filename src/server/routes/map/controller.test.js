@@ -82,3 +82,84 @@ describe('#mapController dataSelectorUrl', () => {
     })
   })
 })
+
+describe('#nearbyStationsMapController POST /map/view', () => {
+  let server
+
+  beforeAll(async () => {
+    server = await createServer()
+    await server.initialize()
+  })
+
+  afterAll(async () => {
+    await server.stop({ timeout: 0 })
+  })
+
+  const postView = (payload) =>
+    server.inject({ method: 'POST', url: '/map/view', payload })
+
+  test('Should render the map with the nearby stations view', async () => {
+    const { statusCode, result } = await postView({
+      lat: '52.476',
+      lng: '-1.875',
+      siteId: 'BIRR'
+    })
+
+    expect(statusCode).toBe(statusCodes.ok)
+    const match = /data-nearby-stations-view="([^"]+)"/.exec(result)
+    const view = JSON.parse(match[1].replaceAll('&quot;', '"'))
+    expect(view).toEqual({
+      center: [-1.875, 52.476],
+      zoom: 11,
+      selectedStationId: 'ms-BIRR'
+    })
+  })
+
+  test('Should render the nearby stations view without a station when no siteId is sent', async () => {
+    const { result } = await postView({ lat: '52.476', lng: '-1.875' })
+
+    expect(result).toEqual(expect.stringContaining('data-nearby-stations-view'))
+    expect(result).not.toEqual(expect.stringContaining('selectedStationId'))
+  })
+
+  test('Should ignore unknown fields', async () => {
+    const { statusCode, result } = await postView({
+      lat: '52.476',
+      lng: '-1.875',
+      extra: 'x'
+    })
+
+    expect(statusCode).toBe(statusCodes.ok)
+    expect(result).not.toEqual(expect.stringContaining('extra'))
+  })
+
+  test.each([
+    ['coordinates outside the UK', { lat: '40', lng: '-1.8' }],
+    ['non-numeric coordinates', { lat: 'abc', lng: '-1.8' }],
+    ['missing coordinates', { siteId: 'BIRR' }],
+    ['an invalid siteId', { lat: '52.4', lng: '-1.8', siteId: '<script>' }]
+  ])('Should redirect to the default map for %s', async (_label, payload) => {
+    const { statusCode, headers } = await postView(payload)
+
+    expect(statusCode).toBe(302)
+    expect(headers.location).toBe('/map')
+  })
+
+  test('Should reject an oversized payload', async () => {
+    const { statusCode } = await postView({
+      lat: '52.4',
+      lng: '-1.8',
+      padding: 'x'.repeat(2048)
+    })
+
+    expect(statusCode).toBe(413)
+  })
+
+  test('Should not render a nearby stations view on a plain GET /map', async () => {
+    const { result } = await server.inject({ method: 'GET', url: '/map' })
+
+    expect(result).not.toEqual(
+      expect.stringContaining('data-nearby-stations-view')
+    )
+  })
+})

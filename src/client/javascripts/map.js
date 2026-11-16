@@ -21,7 +21,11 @@ import { createMarkerAccessibility } from './map-marker-accessibility.js'
 import { initMapPanels } from './map-panels.js'
 import { createStationPanelController } from './map-station-panel.js'
 import { initZoomControls } from './map-zoom-controls.js'
-import { restoreMapViewState, saveMapViewState } from './map-view-state.js'
+import {
+  readNearbyStationsView,
+  restoreMapViewState,
+  saveMapViewState
+} from './map-view-state.js'
 
 const defaultZoom = 5.4842222
 const ukCentreLng = -1.4649
@@ -40,8 +44,10 @@ const CLICK_SELECT_MAX_PX = 20
 
 let maplibreInstance = null
 
-// Present only when the user is returning from a station page
-const restoredView = restoreMapViewState()
+// Arriving from "View map of nearby monitoring stations" wins over the view
+// saved before leaving for a station page; the saved one is consumed either way.
+const savedView = restoreMapViewState()
+const restoredView = readNearbyStationsView() ?? savedView
 
 const map = new defra.InteractiveMap('map', {
   mapProvider: defra.maplibreProvider(),

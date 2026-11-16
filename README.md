@@ -60,6 +60,8 @@ Selecting a station opens a panel that shows:
 
 When you follow **View full station summary**, the station page opens in the same window. The map saves its view (zoom, position, filters, forecast day and selected station) in `sessionStorage` just before you leave, and restores it once when you return, so you land back where you were. Nothing is put in the URL. A saved view is used only once and expires after 30 minutes; if it is missing or invalid the map opens at the default UK view.
 
+Other services can open the map at a station by POSTing a form to `/map/view` with `lat`, `lng` and optionally `siteId` (the station's local site ID, e.g. `BIRR`). The dataselector's "View map of nearby monitoring stations" link does this. The map opens zoomed in on that location with the station selected, and the address bar is reset to `/map`. The payload is validated (UK coordinates, alphanumeric `siteId`, 1KB limit); anything invalid redirects to the default map.
+
 ### Pollutant filter panel
 
 A **filter panel** lets you restrict which stations are shown on the map by pollutant type. There are two tabs:
