@@ -1889,3 +1889,121 @@ describe('#map panels and zoom controls', () => {
     expect(byId('map-key-overlay').hidden).toBe(false)
   })
 })
+
+describe('#map view state', () => {
+  const station = {
+    localSiteID: 'UKA001',
+    name: 'London Test',
+    stationStatus: 'current',
+    pollutants: ['NO2'],
+    location: { coordinates: [51.5, -0.1] }
+  }
+  const STORAGE_KEY = 'aqie-map-view-state'
+
+  async function loadWithSavedView(state) {
+    resetDom()
+    stubFetch({ stations: [station] })
+    sessionStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ savedAt: Date.now(), state })
+    )
+    vi.resetModules()
+    await import('./map.js')
+    mapReadyCallback()
+  }
+
+  afterEach(() => {
+    sessionStorage.clear()
+  })
+
+  test('Should open at the saved zoom and position', async () => {
+    await loadWithSavedView({ zoom: 11, center: [-0.1, 51.5] })
+    expect(InteractiveMap).toHaveBeenLastCalledWith(
+      'map',
+      expect.objectContaining({ zoom: 11, center: [-0.1, 51.5] })
+    )
+  })
+
+  test('Should open at the default view when nothing was saved', async () => {
+    await loadWithSavedView(null)
+    expect(InteractiveMap).toHaveBeenLastCalledWith(
+      'map',
+      expect.objectContaining({
+        zoom: defaultZoom,
+        center: [ukCentreLng, ukCentreLat]
+      })
+    )
+  })
+
+  test('Should restore the saved filters', async () => {
+    await loadWithSavedView({
+      filters: { mode: 'daqi', mapMode: 'aurn', selected: ['O3'] }
+    })
+    const { filterState } = await import('./map-filter-panel.js')
+    expect([...filterState.selected]).toEqual(['O3'])
+    expect(document.getElementById('filter-pollutant-3').checked).toBe(false)
+    // The only station monitors NO2, so it no longer matches the filter
+    expect(mockMapInstance.addMarker).not.toHaveBeenCalled()
+  })
+
+  test('Should reopen the station that was selected', async () => {
+    await loadWithSavedView({ selectedStationId: 'ms-UKA001' })
+    expect(
+      document.getElementById('station-panel').classList.contains('visible')
+    ).toBe(true)
+    expect(document.getElementById('sp-name').textContent).toContain(
+      'London Test'
+    )
+  })
+
+  test('Should ignore a saved station that no longer exists', async () => {
+    await loadWithSavedView({ selectedStationId: 'ms-GONE' })
+    expect(
+      document.getElementById('station-panel').classList.contains('visible')
+    ).toBe(false)
+  })
+
+  test('Should not restore the same view on a second visit', async () => {
+    await loadWithSavedView({ zoom: 11 })
+    await loadWithSavedView(null)
+    expect(sessionStorage.getItem(STORAGE_KEY)).toBeNull()
+    expect(InteractiveMap).toHaveBeenLastCalledWith(
+      'map',
+      expect.objectContaining({ zoom: defaultZoom })
+    )
+  })
+
+  test('Should save the current view when the station summary link is clicked', async () => {
+    await loadWithSavedView(null)
+    // The mock instance is shared with the import from beforeEach, so use the latest listener
+    const [, onMapReady] = mockMapInstance.on.mock.calls
+      .filter(([event]) => event === 'map:ready')
+      .at(-1)
+    onMapReady({
+      map: {
+        getZoom: () => 8.25,
+        getMaxZoom: () => 16,
+        getMinZoom: () => 0,
+        getCenter: () => ({ lng: -1.5, lat: 52.1 }),
+        on: vi.fn()
+      }
+    })
+    mapClickCallback({ coords: [-0.1, 51.5] })
+    vi.spyOn(
+      document.getElementById('sp-station-form'),
+      'submit'
+    ).mockImplementation(() => {})
+    document.getElementById('sp-station-link').click()
+
+    const saved = JSON.parse(sessionStorage.getItem(STORAGE_KEY)).state
+    expect(saved).toMatchObject({
+      zoom: 8.25,
+      center: [-1.5, 52.1],
+      selectedStationId: 'ms-UKA001',
+      filters: { mode: 'daqi', mapMode: 'aurn' }
+    })
+    expect(saved.filters.selected).toEqual(
+      expect.arrayContaining(['NO2', 'O3', 'SO2', 'PM25', 'PM10'])
+    )
+  })
+})

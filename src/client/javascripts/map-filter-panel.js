@@ -147,6 +147,56 @@ function initPollutantCheckboxes(onFilterChange) {
   })
 }
 
+function setTabPressed(button, pressed) {
+  button?.setAttribute(ARIA_PRESSED, String(pressed))
+  button?.classList.toggle(TAB_ACTIVE_CLASS, pressed)
+}
+
+function setHidden(id, hidden) {
+  const element = document.getElementById(id)
+  if (element) {
+    element.hidden = hidden
+  }
+}
+
+/**
+ * Applies a previously saved filter selection to filterState and to the
+ * pre-rendered panel controls, without triggering a re-plot. Call before
+ * the first plot so the markers and the panel agree.
+ * @param {{ mode?: string, mapMode?: string, selected?: string[] }} [saved]
+ */
+function applyFilterState(saved) {
+  if (!saved) {
+    return
+  }
+  if (saved.mode) {
+    filterState.mode = saved.mode
+    const isDaqi = saved.mode === 'daqi'
+    setTabPressed(document.getElementById('filter-tab-daqi'), isDaqi)
+    setTabPressed(document.getElementById('filter-tab-other'), !isDaqi)
+    setHidden('filter-daqi-content', !isDaqi)
+    setHidden('filter-other-content', isDaqi)
+  }
+  if (saved.mapMode) {
+    filterState.mapMode = saved.mapMode
+    const isAurn = saved.mapMode === 'aurn'
+    setTabPressed(document.getElementById('map-type-aurn'), isAurn)
+    setTabPressed(document.getElementById('map-type-forecast'), !isAurn)
+    setHidden('pollutant-filter-controls', !isAurn)
+    setHidden('forecast-day-controls', isAurn)
+  }
+  if (saved.selected) {
+    filterState.selected = new Set(saved.selected)
+    document
+      .querySelectorAll('input[name="filter-pollutant"]')
+      .forEach((checkbox) => {
+        checkbox.checked = checkbox.value
+          .split(',')
+          .some((code) => filterState.selected.has(code))
+      })
+  }
+}
+
 /**
  * Wires up the filter panel tabs and checkboxes. Opening and closing the
  * panel is handled by map-panels.js.
@@ -176,4 +226,10 @@ function initFilterPanel(onFilterChange) {
   initPollutantCheckboxes(onFilterChange)
 }
 
-export { filterState, stationMatchesFilter, isActiveStation, initFilterPanel }
+export {
+  filterState,
+  stationMatchesFilter,
+  isActiveStation,
+  initFilterPanel,
+  applyFilterState
+}

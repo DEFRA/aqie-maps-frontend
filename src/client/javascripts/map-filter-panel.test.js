@@ -1,6 +1,10 @@
 // @vitest-environment jsdom
 import { vi, beforeEach, describe, test, expect } from 'vitest'
-import { filterState, initFilterPanel } from './map-filter-panel.js'
+import {
+  filterState,
+  initFilterPanel,
+  applyFilterState
+} from './map-filter-panel.js'
 
 const ARIA_PRESSED = 'aria-pressed'
 
@@ -104,5 +108,58 @@ describe('map-filter-panel — map type toggle', () => {
   test('clicking Monitoring stations tab calls onFilterChange', () => {
     document.getElementById('map-type-aurn').click()
     expect(onFilterChange).toHaveBeenCalled()
+  })
+})
+
+describe('map-filter-panel — applyFilterState', () => {
+  beforeEach(() => {
+    buildDom()
+    document.getElementById('filter-daqi-content').innerHTML = `
+      <input type="checkbox" name="filter-pollutant" value="NO2" checked>
+      <input type="checkbox" name="filter-pollutant" value="O3" checked>`
+    filterState.mode = 'daqi'
+    filterState.mapMode = 'aurn'
+    filterState.selected = new Set(['NO2', 'O3'])
+  })
+
+  test('does nothing when there is no saved state', () => {
+    applyFilterState(undefined)
+    expect(filterState.mode).toBe('daqi')
+    expect(filterState.mapMode).toBe('aurn')
+  })
+
+  test('restores the forecast map type and its controls', () => {
+    applyFilterState({ mapMode: 'forecast' })
+    expect(filterState.mapMode).toBe('forecast')
+    expect(
+      document.getElementById('map-type-forecast').getAttribute(ARIA_PRESSED)
+    ).toBe('true')
+    expect(document.getElementById('pollutant-filter-controls').hidden).toBe(
+      true
+    )
+    expect(document.getElementById('forecast-day-controls').hidden).toBe(false)
+  })
+
+  test('restores the Other pollutants tab', () => {
+    applyFilterState({ mode: 'other' })
+    expect(filterState.mode).toBe('other')
+    expect(document.getElementById('filter-other-content').hidden).toBe(false)
+    expect(document.getElementById('filter-daqi-content').hidden).toBe(true)
+  })
+
+  test('restores the selected pollutants in state and checkboxes', () => {
+    applyFilterState({ selected: ['O3'] })
+    expect([...filterState.selected]).toEqual(['O3'])
+    const [no2, o3] = document.querySelectorAll(
+      'input[name="filter-pollutant"]'
+    )
+    expect(no2.checked).toBe(false)
+    expect(o3.checked).toBe(true)
+  })
+
+  test('restores an empty pollutant selection', () => {
+    applyFilterState({ selected: [] })
+    expect(filterState.selected.size).toBe(0)
+    expect(document.querySelector('input:checked')).toBeNull()
   })
 })
