@@ -132,7 +132,7 @@ function resetDom() {
               </div>
             </div>
             <div id="filter-other-content" hidden>
-              <p class="govuk-body-s govuk-!-margin-top-2">Other pollutant networks are not yet available.</p>
+              <p class="govuk-body-s govuk-!-margin-top-2">We will add more pollutants and data sources during 2026.</p>
             </div>
           </div>
           <div id="filter-sections">
