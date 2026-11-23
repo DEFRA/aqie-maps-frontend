@@ -3,12 +3,5 @@
   "$schema": "https://github.com/IBM/audit-ci/raw/main/docs/schema.json",
   "high": true,
   "allowlist": [
-    {
-      "GHSA-vfj7-8cjw-p6xm": {
-        "active": true,
-        "notes": "braces stack-exhaustion DoS, no patched version exists upstream (braces latest is 3.0.3, still affected). Cascades through micromatch->fast-glob->globby->stylelint->stylelint-config-* (dev/build tooling, not in prod) and chokidar->nodemon (dev-only) / nunjucks (prod dependency, but chokidar is only invoked via nunjucks.watch, which defaults to false outside development - see src/config/config.js). Re-review before expiry in case an upstream fix lands.",
-        "expiry": "9 November 2026"
-      }
-    }
   ]
 }
